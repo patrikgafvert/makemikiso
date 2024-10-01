@@ -445,6 +445,7 @@ stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox
 stamp/makedir:
 	mkdir -p dist src stamp
 	mkdir -p $(INITRAMFS_BASE){dev,etc/rc,home,mnt,proc,root,sys,tmp/run,usr/{bin,sbin,lib},var}
+	mkdir -p $(INITRAMFS_BASE)etc/init.d
 	mkdir -p dist/mikrotik
 	mkdir -p $(ROOT_BASE)/boot/{syslinux,grub}
 	chmod a+rwxt $(INITRAMFS_BASE)tmp
