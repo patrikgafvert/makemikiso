@@ -696,3 +696,4 @@ init:
 	for file in $$($(ROOT_DIR)src/$(BUSYBOX_DIR)/busybox --list-full); do echo "slink /$$file /bin/busybox 777 0 0"; done >> $(INITRAMFS_BASE)default_cpio_list
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)initramfs.cpio.xz
+	@echo Initramfs was created $@
