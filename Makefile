@@ -1,9 +1,9 @@
 SHELL:=$(shell which bash)
 ARCH=x86_64
 ROOT_DIR=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-INITRAMFS_BASE=$(ROOT_DIR)out/initramfs/
 OUT_BASE=$(ROOT_DIR)out/
-ROOT_BASE=$(ROOT_DIR)out/root/
+INITRAMFS_BASE=$(OUT_BASE)initramfs/
+ROOT_BASE=$(OUT_BASE)root/
 INITRAMFS_FILE=initramfs
 DOWNLOADCMD=curl -s -O -L -k
 MAKEOPT=-j$$(nproc)
@@ -270,8 +270,8 @@ dir /usr/sbin   755 0 0
 dir /usr/lib64  755 0 0
 dir /var        755 0 0
 nod /dev/console 0644 0 0 c 5 1
-file /init              $(INITRAMFS_BASE)init                       755 0 0
 file /bin/busybox       $(ROOT_DIR)src/$(BUSYBOX_DIR)/busybox       755 0 0
+file /init              $(INITRAMFS_BASE)init                       755 0 0
 file /etc/inittab       $(INITRAMFS_BASE)etc/inittab                755 0 0
 file /etc/init.d/rcS    $(INITRAMFS_BASE)etc/init.d/rcS             755 0 0
 file /etc/passwd        $(INITRAMFS_BASE)etc/passwd                 600 0 0
@@ -443,7 +443,7 @@ stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox
 	@touch $@
 
 stamp/makedir:
-	mkdir -p dist src stamp
+	mkdir -p dist src stamp out
 	mkdir -p $(INITRAMFS_BASE){dev,etc/rc,home,mnt,proc,root,sys,tmp/run,usr/{bin,sbin,lib},var}
 	mkdir -p $(INITRAMFS_BASE)etc/init.d
 	mkdir -p dist/mikrotik
