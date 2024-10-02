@@ -3,6 +3,8 @@ ARCH=x86_64
 ROOT_DIR=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_BASE=$(ROOT_DIR)out/
 SRC_BASE=$(ROOT_DIR)src/
+DIST_BASE=$(ROOT_DIR)dist/
+STAMP_BASE=$(ROOT_DIR)stamp/
 INITRAMFS_BASE=$(OUT_BASE)initramfs/
 ROOT_BASE=$(OUT_BASE)root/
 INITRAMFS_FILE=initramfs
@@ -445,7 +447,9 @@ stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox
 
 stamp/makedir:
 
-	mkdir -p dist stamp out
+	mkdir -p $(OUT_BASE)
+	mkdir -p $(STAMP_BASE)
+	mkdir -p $(DIST_BASE)
 	mkdir -p $(SRC_BASE)
 	mkdir -p $(INITRAMFS_BASE)
 	mkdir -p $(ROOT_BASE)
