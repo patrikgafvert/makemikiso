@@ -440,6 +440,7 @@ all: stamp/makedir stamp/compile stamp/compile-strace stamp/filecopy stamp/init
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file
 	@echo Make files $@
+	@touch $@
 
 stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox
 	@echo Make $@
@@ -453,6 +454,7 @@ stamp/makedir:
 	mkdir -p $(INITRAMFS_BASE)
 	mkdir -p $(ROOT_BASE)
 	@echo Make dirs $@
+	@touch $@
 
 stamp/fetch-all: stamp/fetch-kernel stamp/fetch-busybox stamp/fetch-xorriso stamp/fetch-grub stamp/fetch-syslinux stamp/fetch-mtools stamp/fetch-dhtest stamp/fetch-glibc
 	@echo Fetch $@
@@ -631,58 +633,72 @@ stamp/mtools: stamp/fetch-mtools
 stamp/init-file:
 	printf "%s\n" "$$file_init" > $(INITRAMFS_BASE)init
 	@echo Make file $@
+	@touch $@
 
 stamp/issue-file:
 	printf "%s\n" "$$file_issue" > $(INITRAMFS_BASE)issue
 	@echo Make file $@
+	@touch $@
 
 stamp/hostname-file:
 	printf "%s\n" "$$file_hostname" > $(INITRAMFS_BASE)hostname
 	@echo Make file $@
+	@touch $@
 
 stamp/hosts-file:
 	printf "%s\n" "$$file_hosts" > $(INITRAMFS_BASE)hosts
 	@echo Make file $@
+	@touch $@
 
 stamp/nsswitch-file:
 	printf "%s\n" "$$file_nsswitch_conf" > $(INITRAMFS_BASE)nsswitch.conf
 	@echo Make file $@
+	@touch $@
 
 stamp/passwd-file:
 	printf "%s\n" "$$file_passwd" > $(INITRAMFS_BASE)passwd
 	@echo Make file $@
+	@touch $@
 
 stamp/shadow-file:
 	printf "%s\n" "$$file_shadow" > $(INITRAMFS_BASE)shadow
 	@echo Make file $@
+	@touch $@
 
 stamp/inittab-file:
 	printf "%s\n" "$$file_inittab" > $(INITRAMFS_BASE)inittab
 	@echo Make file $@
+	@touch $@
 
 stamp/group-file:
 	printf "%s\n" "$$file_group" > $(INITRAMFS_BASE)group
 	@echo Make file $@
+	@touch $@
 
 stamp/resolv-file:
 	printf "%s\n" "$$file_resolv" > $(INITRAMFS_BASE)resolv.conf
 	@echo Make file $@
+	@touch $@
 
 stamp/services-file:
 	printf "%s" "$$file_services" | base64 -d | xz -d > $(INITRAMFS_BASE)services
 	@echo Make file $@
+	@touch $@
 
 stamp/protocols-file:
 	printf "%s" "$$file_protocols" | base64 -d | xz -d > $(INITRAMFS_BASE)protocols
 	@echo Make file $@
+	@touch $@
 
 stamp/profile-file:
 	printf "%s\n" "$$file_profile" > $(INITRAMFS_BASE)profile
 	@echo Make file $@
+	@touch $@
 
 stamp/rcS-file:
 	printf "%s\n" "$$file_rcS" > $(INITRAMFS_BASE)rcS
 	@echo Make file $@
+	@touch $@
 
 stamp/ver:
 	@echo $(MIKROTIKVER_STABLE)
@@ -701,3 +717,4 @@ stamp/init:
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)initramfs.cpio.xz
 	@echo Initramfs was created $@
+	@touch $@
