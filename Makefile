@@ -2,6 +2,7 @@ SHELL:=$(shell which bash)
 ARCH=x86_64
 ROOT_DIR=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_BASE=$(ROOT_DIR)out/
+SRC_BASE=$(ROOT_DIR)src/
 INITRAMFS_BASE=$(OUT_BASE)initramfs/
 ROOT_BASE=$(OUT_BASE)root/
 INITRAMFS_FILE=initramfs
@@ -79,7 +80,7 @@ DHTEST_URL=https://github.com/saravana815/dhtest/archive/$(DHTEST_TARBALL)
 STRACE_VER=6.10
 STRACE_FILE=strace-$(STRACE_VER)
 STRACE_TARBALL=$(STRACE_FILE).tar.xz
-STRACE_DIR=$(STRACE_FILE)
+STRACE_DIR=$(STRACE_FILE)/
 STRACE_URL=https://github.com/strace/strace/releases/download/v$(STRACE_VER)/$(STRACE_TARBALL)
 
 DNSMASQ_VER=2.90
@@ -270,22 +271,22 @@ dir /usr/sbin   755 0 0
 dir /usr/lib64  755 0 0
 dir /var        755 0 0
 nod /dev/console 0644 0 0 c 5 1
-file /bin/busybox       $(ROOT_DIR)src/$(BUSYBOX_DIR)/busybox       755 0 0
-file /init              $(INITRAMFS_BASE)init                       755 0 0
-file /etc/inittab       $(INITRAMFS_BASE)etc/inittab                755 0 0
-file /etc/init.d/rcS    $(INITRAMFS_BASE)etc/init.d/rcS             755 0 0
-file /etc/passwd        $(INITRAMFS_BASE)etc/passwd                 600 0 0
-file /etc/shadow        $(INITRAMFS_BASE)etc/shadow                 600 0 0
-file /etc/group         $(INITRAMFS_BASE)etc/group                  755 0 0
-file /etc/issue         $(INITRAMFS_BASE)etc/issue                  755 0 0
-file /etc/hosts         $(INITRAMFS_BASE)etc/hosts                  755 0 0
-file /etc/hostname      $(INITRAMFS_BASE)etc/hostname               755 0 0
-file /etc/services      $(INITRAMFS_BASE)etc/services               755 0 0
-file /etc/protocols     $(INITRAMFS_BASE)etc/protocols              755 0 0
-file /etc/profile       $(INITRAMFS_BASE)etc/profile                755 0 0
-file /etc/resolv.conf   $(INITRAMFS_BASE)etc/resolv.conf            755 0 0
-file /etc/nsswitch.conf $(INITRAMFS_BASE)etc/nsswitch.conf          755 0 0
-file /sbin/strace       $(INITRAMFS_BASE)sbin/strace                755 0 0
+file /bin/busybox       $(SRC_BASE)$(BUSYBOX_DIR)busybox        755 0 0
+file /init              $(INITRAMFS_BASE)init                   755 0 0
+file /etc/inittab       $(INITRAMFS_BASE)inittab                755 0 0
+file /etc/init.d/rcS    $(INITRAMFS_BASE)rcS                    755 0 0
+file /etc/passwd        $(INITRAMFS_BASE)passwd                 600 0 0
+file /etc/shadow        $(INITRAMFS_BASE)shadow                 600 0 0
+file /etc/group         $(INITRAMFS_BASE)group                  755 0 0
+file /etc/issue         $(INITRAMFS_BASE)issue                  755 0 0
+file /etc/hosts         $(INITRAMFS_BASE)hosts                  755 0 0
+file /etc/hostname      $(INITRAMFS_BASE)hostname               755 0 0
+file /etc/services      $(INITRAMFS_BASE)services               755 0 0
+file /etc/protocols     $(INITRAMFS_BASE)protocols              755 0 0
+file /etc/profile       $(INITRAMFS_BASE)profile                755 0 0
+file /etc/resolv.conf   $(INITRAMFS_BASE)resolv.conf            755 0 0
+file /etc/nsswitch.conf $(INITRAMFS_BASE)nsswitch.conf          755 0 0
+file /sbin/strace       $(SRC_BASE)$(STRACE_DIR)src/strace      755 0 0
 endef
 
 define file_init
@@ -443,15 +444,12 @@ stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox
 	@touch $@
 
 stamp/makedir:
-	mkdir -p dist src stamp out
-	mkdir -p $(INITRAMFS_BASE){dev,etc/rc,home,mnt,proc,root,sys,tmp/run,usr/{bin,sbin,lib},var}
-	mkdir -p $(INITRAMFS_BASE)etc/init.d
-	mkdir -p dist/mikrotik
-	mkdir -p $(ROOT_BASE)/boot/{syslinux,grub}
-	chmod a+rwxt $(INITRAMFS_BASE)tmp
-	ln -s usr/{bin,sbin,lib} tmp/run $(INITRAMFS_BASE)
+
+	mkdir -p dist stamp out
+	mkdir -p $(SRC_BASE)
+	mkdir -p $(INITRAMFS_BASE)
+	mkdir -p $(ROOT_BASE)
 	@echo Make dirs $@
-	@touch $@
 
 stamp/fetch-all: stamp/fetch-kernel stamp/fetch-busybox stamp/fetch-xorriso stamp/fetch-grub stamp/fetch-syslinux stamp/fetch-mtools stamp/fetch-dhtest stamp/fetch-glibc
 	@echo Fetch $@
@@ -630,55 +628,55 @@ stamp/init-file:
 	@echo Make file $@
 
 stamp/issue-file:
-	printf "%s\n" "$$file_issue" > $(INITRAMFS_BASE)etc/issue
+	printf "%s\n" "$$file_issue" > $(INITRAMFS_BASE)issue
 	@echo Make file $@
 
 stamp/hostname-file:
-	printf "%s\n" "$$file_hostname" > $(INITRAMFS_BASE)etc/hostname
+	printf "%s\n" "$$file_hostname" > $(INITRAMFS_BASE)hostname
 	@echo Make file $@
 
 stamp/hosts-file:
-	printf "%s\n" "$$file_hosts" > $(INITRAMFS_BASE)etc/hosts
+	printf "%s\n" "$$file_hosts" > $(INITRAMFS_BASE)hosts
 	@echo Make file $@
 
 stamp/nsswitch-file:
-	printf "%s\n" "$$file_nsswitch_conf" > $(INITRAMFS_BASE)etc/nsswitch.conf
+	printf "%s\n" "$$file_nsswitch_conf" > $(INITRAMFS_BASE)nsswitch.conf
 	@echo Make file $@
 
 stamp/passwd-file:
-	printf "%s\n" "$$file_passwd" > $(INITRAMFS_BASE)etc/passwd
+	printf "%s\n" "$$file_passwd" > $(INITRAMFS_BASE)passwd
 	@echo Make file $@
 
 stamp/shadow-file:
-	printf "%s\n" "$$file_shadow" > $(INITRAMFS_BASE)etc/shadow
+	printf "%s\n" "$$file_shadow" > $(INITRAMFS_BASE)shadow
 	@echo Make file $@
 
 stamp/inittab-file:
-	printf "%s\n" "$$file_inittab" > $(INITRAMFS_BASE)etc/inittab
+	printf "%s\n" "$$file_inittab" > $(INITRAMFS_BASE)inittab
 	@echo Make file $@
 
 stamp/group-file:
-	printf "%s\n" "$$file_group" > $(INITRAMFS_BASE)etc/group
+	printf "%s\n" "$$file_group" > $(INITRAMFS_BASE)group
 	@echo Make file $@
 
 stamp/resolv-file:
-	printf "%s\n" "$$file_resolv" > $(INITRAMFS_BASE)etc/resolv.conf
+	printf "%s\n" "$$file_resolv" > $(INITRAMFS_BASE)resolv.conf
 	@echo Make file $@
 
 stamp/services-file:
-	printf "%s" "$$file_services" | base64 -d | xz -d > $(INITRAMFS_BASE)etc/services
+	printf "%s" "$$file_services" | base64 -d | xz -d > $(INITRAMFS_BASE)services
 	@echo Make file $@
 
 stamp/protocols-file:
-	printf "%s" "$$file_protocols" | base64 -d | xz -d > $(INITRAMFS_BASE)etc/protocols
+	printf "%s" "$$file_protocols" | base64 -d | xz -d > $(INITRAMFS_BASE)protocols
 	@echo Make file $@
 
 stamp/profile-file:
-	printf "%s\n" "$$file_profile" > $(INITRAMFS_BASE)etc/profile
+	printf "%s\n" "$$file_profile" > $(INITRAMFS_BASE)profile
 	@echo Make file $@
 
 stamp/rcS-file:
-	printf "%s\n" "$$file_rcS" > $(INITRAMFS_BASE)etc/init.d/rcS
+	printf "%s\n" "$$file_rcS" > $(INITRAMFS_BASE)rcS
 	@echo Make file $@
 
 stamp/ver:
@@ -694,7 +692,7 @@ run:
 
 init:
 	printf "%s\n" "$$file_default_cpio_list" > $(INITRAMFS_BASE)default_cpio_list
-	for file in $$($(ROOT_DIR)src/$(BUSYBOX_DIR)/busybox --list-full); do echo "slink /$$file /bin/busybox 777 0 0"; done >> $(INITRAMFS_BASE)default_cpio_list
+	for file in $$($(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full); do echo "slink /$$file /bin/busybox 777 0 0"; done >> $(INITRAMFS_BASE)default_cpio_list
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)initramfs.cpio.xz
 	@echo Initramfs was created $@
