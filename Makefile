@@ -436,7 +436,7 @@ endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab
 
-all: stamp/makedir stamp/fetch-all stamp/compile stamp/filecopy stamp/compile-grubefi stamp/compile-mtools stamp/compile-xorriso
+all: stamp/makedir stamp/compile stamp/compile-strace stamp/filecopy stamp/init
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file
 	@echo Make files $@
@@ -446,7 +446,6 @@ stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox
 	@touch $@
 
 stamp/makedir:
-
 	mkdir -p $(OUT_BASE)
 	mkdir -p $(STAMP_BASE)
 	mkdir -p $(DIST_BASE)
@@ -562,6 +561,8 @@ stamp/compile-strace: stamp/fetch-strace
 	cd src/$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
 	cd src/$(STRACE_DIR)/src && strip ./strace
 	cd src/$(STRACE_DIR)/src && cp ./strace $(INITRAMFS_BASE)sbin
+	@echo Compile $@
+	@touch $@
 
 stamp/compile-grubmbr: stamp/fetch-grub
 	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
@@ -694,7 +695,7 @@ clean:
 run:
 	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)bzImage -initrd $(ROOT_BASE)initramfs.cpio.xz -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
-init:
+stamp/init:
 	printf "%s\n" "$$file_default_cpio_list" > $(INITRAMFS_BASE)default_cpio_list
 	for file in $$($(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full); do echo "slink /$$file /bin/busybox 777 0 0"; done >> $(INITRAMFS_BASE)default_cpio_list
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
