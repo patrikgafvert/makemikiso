@@ -114,7 +114,6 @@ endef
 
 define file_rcS
 #!/bin/sh
-cat /etc/issue
 ip link set lo up
 ip link set eth0 up
 ip addr add 10.0.2.15/24 brd + dev eth0
@@ -123,6 +122,7 @@ endef
 
 define file_profile
 export PS1='[\u@\h \W]\$$ '
+cat /etc/issue
 endef
 
 define file_inittab
@@ -453,6 +453,7 @@ stamp/makedir:
 	mkdir -p $(SRC_BASE)
 	mkdir -p $(INITRAMFS_BASE)
 	mkdir -p $(ROOT_BASE)
+	mkdir -p $(ROOT_BASE)boot
 	@echo Make dirs $@
 	@touch $@
 
@@ -599,11 +600,17 @@ stamp/compile-dnsmasq: stamp/fetch-dnsmasq
 	@echo Compile $@
 	@touch $@
 
+stamp/init:
+	printf "%s\n" "$$file_default_cpio_list" > $(INITRAMFS_BASE)default_cpio_list
+	for file in $$($(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full); do echo "slink /$$file /bin/busybox 777 0 0"; done >> $(INITRAMFS_BASE)default_cpio_list
+	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
+	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)initramfs.cpio.xz
+	@echo Initramfs was created $@
+	@touch $@
+
 stamp/fetch-routeros:
 	@$(foreach device,$(MIKROTIKARCH),echo $(DOWNLOADCMD) $(MIKROTIKURL_ST);)
-	@echo $(DOWNLOADCMD)
 	@$(foreach device,$(MIKROTIKARCH),echo $(DOWNLOADCMD) $(MIKROTIKURL_TE);)
-	@echo $(DOWNLOADCMD) $(MIKROTIKURL_NET_TE)
 
 stamp/get-netinstall-bootcode: stamp/compile-dhtest
 	sudo ./netinstall-cli -a 127.0.0.2 routeros-7.15.3.npk & echo $$! > netinstall.pid
@@ -706,15 +713,10 @@ stamp/ver:
 
 clean:
 	@echo "Cleaning build ..."
-	$(RM) -r src dist stamp out
-
+	$(RM) -r $(SRC_BASE) $(DIST_BASE) $(STAMP_BASE) $(OUT_BASE)
 run:
 	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)bzImage -initrd $(ROOT_BASE)initramfs.cpio.xz -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
-stamp/init:
-	printf "%s\n" "$$file_default_cpio_list" > $(INITRAMFS_BASE)default_cpio_list
-	for file in $$($(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full); do echo "slink /$$file /bin/busybox 777 0 0"; done >> $(INITRAMFS_BASE)default_cpio_list
-	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
-	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)initramfs.cpio.xz
-	@echo Initramfs was created $@
-	@touch $@
+.PHONY: printvars
+printvars:
+	@$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
