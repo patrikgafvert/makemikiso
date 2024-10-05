@@ -263,6 +263,7 @@ dir /proc       755 0 0
 dir /root       700 0 0
 dir /sbin       755 0 0
 dir /sys        755 0 0
+dir /home       755 0 0
 dir /usr        755 0 0
 dir /usr/bin    755 0 0
 dir /usr/sbin   755 0 0
@@ -440,13 +441,7 @@ stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox
 	@echo Make $@
 
 stamp/makedir:
-	mkdir -p $(OUT_BASE)
-	mkdir -p $(STAMP_BASE)
-	mkdir -p $(DIST_BASE)
-	mkdir -p $(SRC_BASE)
-	mkdir -p $(INITRAMFS_BASE)
-	mkdir -p $(ROOT_BASE)
-	mkdir -p $(ROOT_BASE)boot
+	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE) $(ROOT_BASE)boot
 	@echo Make dirs $@
 
 stamp/fetch-all: stamp/fetch-kernel stamp/fetch-busybox stamp/fetch-xorriso stamp/fetch-grub stamp/fetch-syslinux stamp/fetch-mtools stamp/fetch-dhtest stamp/fetch-glibc
