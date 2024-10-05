@@ -670,7 +670,7 @@ clean:
 	@echo "Cleaning build ..."
 	$(RM) -r $(SRC_BASE) $(DIST_BASE) $(STAMP_BASE) $(OUT_BASE)
 run:
-	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)bzImage -initrd $(ROOT_BASE)initramfs.cpio.xz -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
+	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)bzImage -initrd $(ROOT_BASE)initramfs.cpio.xz -append "console=ttyS0" -smp 2 -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
 .PHONY: printvars
 printvars:
