@@ -7,7 +7,7 @@ DIST_BASE=$(ROOT_DIR)dist/
 STAMP_BASE=$(ROOT_DIR)stamp/
 INITRAMFS_BASE=$(OUT_BASE)initramfs/
 ROOT_BASE=$(OUT_BASE)root/
-INITRAMFS_FILE=initramfs
+INITRAMFS_FILE=initramfs.cpio.xz
 DOWNLOADCMD=curl -s -O -L -k
 MAKEOPT=-j$$(nproc)
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
@@ -575,7 +575,7 @@ stamp/init:
 	printf "%s\n" "$$file_default_cpio_list" > $(INITRAMFS_BASE)default_cpio_list
 	for file in $$($(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full); do echo "slink /$$file /bin/busybox 777 0 0"; done >> $(INITRAMFS_BASE)default_cpio_list
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
-	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)initramfs.cpio.xz
+	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)$(INITRAMFS_FILE)
 	@echo Initramfs was created $@
 
 stamp/fetch-routeros:
@@ -670,7 +670,7 @@ clean:
 	@echo "Cleaning build ..."
 	$(RM) -r $(SRC_BASE) $(DIST_BASE) $(STAMP_BASE) $(OUT_BASE)
 run:
-	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)bzImage -initrd $(ROOT_BASE)initramfs.cpio.xz -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
+	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)bzImage -initrd $(ROOT_BASE)$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
 .PHONY: printvars
 printvars:
