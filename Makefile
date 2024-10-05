@@ -268,7 +268,7 @@ dir /usr/bin    755 0 0
 dir /usr/sbin   755 0 0
 dir /usr/lib64  755 0 0
 dir /var        755 0 0
-nod /dev/console 0644 0 0 c 5 1
+#nod /dev/console 0644 0 0 c 5 1
 file /bin/busybox       $(SRC_BASE)$(BUSYBOX_DIR)busybox        755 0 0
 file /init              $(INITRAMFS_BASE)init                   755 0 0
 file /etc/inittab       $(INITRAMFS_BASE)inittab                755 0 0
@@ -514,7 +514,6 @@ stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	cd src/$(LINUX_DIR) && $(MAKE) distclean
 	cd src/$(LINUX_DIR) && $(MAKE) KCONFIG_ALLCONFIG=mytinyconfig allnoconfig
 	cd src/$(LINUX_DIR) && $(MAKE) $(MAKEOPT)
-	cp src/$(LINUX_DIR)arch/$(ARCH)/boot/bzImage $(ROOT_BASE)
 	@echo Compile $@
 
 stamp/compile-busybox: stamp/fetch-busybox
