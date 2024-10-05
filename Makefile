@@ -268,7 +268,6 @@ dir /usr/bin    755 0 0
 dir /usr/sbin   755 0 0
 dir /usr/lib64  755 0 0
 dir /var        755 0 0
-#nod /dev/console 0644 0 0 c 5 1
 file /bin/busybox       $(SRC_BASE)$(BUSYBOX_DIR)busybox        755 0 0
 file /init              $(INITRAMFS_BASE)init                   755 0 0
 file /etc/inittab       $(INITRAMFS_BASE)inittab                755 0 0
