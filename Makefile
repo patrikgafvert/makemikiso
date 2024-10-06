@@ -24,7 +24,7 @@ MIKROTIK_NETINSTALL_DIR=
 MIKROTIK_NETINSTALL_TARBALL=$(MIKROTIK_NETINSTALL_FILE)$(MIKROTIKVER_STABLE).tar.gz
 MIKROTIK_NETINSTALL_URL=https://download.mikrotik.com/routeros/$(MIKROTIK_NETINSTALL_VER)/$(MIKROTIK_NETINSTALL_TARBALL)
 
-LINUX_VER=6.11.1
+LINUX_VER=6.11.2
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
@@ -441,7 +441,7 @@ stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox
 	@echo Make $@
 
 stamp/makedir:
-	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE) $(ROOT_BASE)boot
+	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE)boot
 	@echo Make dirs $@
 
 stamp/fetch-all: stamp/fetch-kernel stamp/fetch-busybox stamp/fetch-xorriso stamp/fetch-grub stamp/fetch-syslinux stamp/fetch-mtools stamp/fetch-dhtest stamp/fetch-glibc
@@ -663,7 +663,7 @@ clean:
 	@echo "Cleaning build ..."
 	$(RM) -r $(SRC_BASE) $(DIST_BASE) $(STAMP_BASE) $(OUT_BASE)
 run:
-	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)bzImage -initrd $(ROOT_BASE)$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
+	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LIXUX_DIR)arch/x86_64/boot/bzImage -initrd $(ROOT_BASE)$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
 .PHONY: printvars
 printvars:
