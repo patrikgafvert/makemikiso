@@ -295,11 +295,11 @@ mount -t devtmpfs -o exec,nosuid,mode=0755,size=2M devtmpfs /dev
 mkdir -p /dev/shm
 chmod +t /dev/shm
 mount -t tmpfs -o nodev,nosuid,noexec shm /dev/shm
-if (exec 0</dev/console) 2>/dev/null; then
-    exec 0</dev/console
-    exec 1>/dev/console
-    exec 2>/dev/console
-fi
+#if (exec 0</dev/console) 2>/dev/null; then
+#    exec 0</dev/console
+#    exec 1>/dev/console
+#    exec 2>/dev/console
+#fi
 dmesg -n 1
 exec /sbin/init "$$@"
 endef
@@ -390,7 +390,9 @@ CONFIG_DEVTMPFS=y
 CONFIG_DEVTMPFS_MOUNT=y
 
 CONFIG_RD_XZ=y
-CONFIG_KERNEL_ZSTD=y
+CONFIG_KERNEL_XZ=y
+CONFIG_IKCONFIG=y
+CONFIG_IKCONFIG_PROC=y
 
 CONFIG_HW_RANDOM=y
 
