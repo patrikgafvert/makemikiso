@@ -24,7 +24,7 @@ MIKROTIK_NETINSTALL_DIR=
 MIKROTIK_NETINSTALL_TARBALL=$(MIKROTIK_NETINSTALL_FILE)$(MIKROTIKVER_STABLE).tar.gz
 MIKROTIK_NETINSTALL_URL=https://download.mikrotik.com/routeros/$(MIKROTIK_NETINSTALL_VER)/$(MIKROTIK_NETINSTALL_TARBALL)
 
-LINUX_VER=6.11.2
+LINUX_VER=6.11.3
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
@@ -119,6 +119,9 @@ define file_profile
 export PS1='[\u@\h \W]\$$ '
 clear
 cat /etc/issue
+echo
+uname -a
+echo
 endef
 
 define file_inittab
@@ -295,11 +298,6 @@ mount -t devtmpfs -o exec,nosuid,mode=0755,size=2M devtmpfs /dev
 mkdir -p /dev/shm
 chmod +t /dev/shm
 mount -t tmpfs -o nodev,nosuid,noexec shm /dev/shm
-#if (exec 0</dev/console) 2>/dev/null; then
-#    exec 0</dev/console
-#    exec 1>/dev/console
-#    exec 2>/dev/console
-#fi
 dmesg -n 1
 exec /sbin/init "$$@"
 endef
@@ -391,6 +389,13 @@ CONFIG_DEVTMPFS_MOUNT=y
 
 CONFIG_RD_XZ=y
 CONFIG_KERNEL_XZ=y
+# CONFIG_HAVE_KERNEL_GZIP is not set
+# CONFIG_HAVE_KERNEL_BZIP2 is not set
+# CONFIG_HAVE_KERNEL_LZMA is not set
+CONFIG_HAVE_KERNEL_XZ=y
+# CONFIG_HAVE_KERNEL_LZO is not set
+# CONFIG_HAVE_KERNEL_LZ4 is not set
+# CONFIG_HAVE_KERNEL_ZSTD is not set
 CONFIG_IKCONFIG=y
 CONFIG_IKCONFIG_PROC=y
 
