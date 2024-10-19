@@ -24,7 +24,7 @@ MIKROTIK_NETINSTALL_DIR=
 MIKROTIK_NETINSTALL_TARBALL=$(MIKROTIK_NETINSTALL_FILE)$(MIKROTIKVER_STABLE).tar.gz
 MIKROTIK_NETINSTALL_URL=https://download.mikrotik.com/routeros/$(MIKROTIK_NETINSTALL_VER)/$(MIKROTIK_NETINSTALL_TARBALL)
 
-LINUX_VER=6.11.3
+LINUX_VER=6.11.4
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
@@ -675,3 +675,5 @@ run:
 .PHONY: printvars
 printvars:
 	@$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
+dir:
+	echo $(CURDIR)
