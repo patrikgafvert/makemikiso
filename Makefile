@@ -17,6 +17,7 @@ MIKROTIKDEVICE="Mips_boot" "MMipsBoot" "Powerboot" "e500_boot" "440__boot" "tile
 MIKROTIKARCH="-arm" "-arm64" "-mipsbe" "-mmips" "-smips" "-tile" "-ppc" ""
 MIKROTIKURL_ST=https://download.mikrotik.com/routeros/$(MIKROTIKVER_STABLE)/routeros-$(MIKROTIKVER_STABLE)$(device).npk
 MIKROTIKURL_TE=https://download.mikrotik.com/routeros/$(MIKROTIKVER_TESTING)/routeros-$(MIKROTIKVER_TESTING)$(device).npk
+PATHS="/bin" "/dev" "/etc" "/etc/init.d" "/lib" "/lib64" "/mnt" "/mnt/root" "/proc" "/sbin" "/sys" "/home" "/usr" "/usr/bin" "/usr/sbin" "/usr/lib64" "/var"
 
 MIKROTIK_NETINSTALL_VER=$(MIKROTIKVER_STABLE)
 MIKROTIK_NETINSTALL_FILE=netinstall-
@@ -254,24 +255,6 @@ define file_hosts
 endef
 
 define file_default_cpio_list
-dir /bin        755 0 0
-dir /dev        755 0 0
-dir /etc        755 0 0
-dir /etc/init.d 755 0 0
-dir /lib        755 0 0
-dir /lib64      755 0 0
-dir /mnt        755 0 0
-dir /mnt/root   755 0 0
-dir /proc       755 0 0
-dir /root       700 0 0
-dir /sbin       755 0 0
-dir /sys        755 0 0
-dir /home       755 0 0
-dir /usr        755 0 0
-dir /usr/bin    755 0 0
-dir /usr/sbin   755 0 0
-dir /usr/lib64  755 0 0
-dir /var        755 0 0
 file /bin/busybox       $(SRC_BASE)$(BUSYBOX_DIR)busybox        755 0 0
 file /init              $(INITRAMFS_BASE)init                   755 0 0
 file /etc/inittab       $(INITRAMFS_BASE)inittab                755 0 0
@@ -572,7 +555,10 @@ stamp/compile-dnsmasq: stamp/fetch-dnsmasq
 	@echo Compile $@
 
 stamp/init:
-	printf "%s\n" "$$file_default_cpio_list" > $(INITRAMFS_BASE)default_cpio_list
+	echo -n > $(INITRAMFS_BASE)default_cpio_list
+	echo "dir /root 700 0 0" >> $(INITRAMFS_BASE)default_cpio_list
+	$(foreach item,$(PATHS),echo "dir $(item) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
+	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
 	for file in $$($(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full); do echo "slink /$$file /bin/busybox 777 0 0"; done >> $(INITRAMFS_BASE)default_cpio_list
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)$(INITRAMFS_FILE)
