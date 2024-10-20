@@ -31,7 +31,7 @@ LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
 LINUX_KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v6.x/$(LINUX_TARBALL)
 
-BUSYBOX_VER=1.36.1
+BUSYBOX_VER=1.37.0
 BUSYBOX_FILE=busybox-$(BUSYBOX_VER)
 BUSYBOX_DIR=$(BUSYBOX_FILE)/
 BUSYBOX_TARBALL=$(BUSYBOX_FILE).tar.bz2
@@ -80,7 +80,7 @@ DHTEST_TARBALL=$(DHTEST_FILE).tar.gz
 DHTEST_DIR=dhtest-master
 DHTEST_URL=https://github.com/saravana815/dhtest/archive/$(DHTEST_TARBALL)
 
-STRACE_VER=6.10
+STRACE_VER=6.11
 STRACE_FILE=strace-$(STRACE_VER)
 STRACE_TARBALL=$(STRACE_FILE).tar.xz
 STRACE_DIR=$(STRACE_FILE)/
@@ -122,6 +122,7 @@ clear
 cat /etc/issue
 echo
 uname -a
+busybox | head -1
 echo
 endef
 
@@ -503,7 +504,6 @@ stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 stamp/compile-busybox: stamp/fetch-busybox
 	cd src/$(BUSYBOX_DIR) && $(MAKE) distclean
 	cd src/$(BUSYBOX_DIR) && $(MAKE) defconfig
-	cd src/$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
 	cd src/$(BUSYBOX_DIR) && sed -i 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
 	cd src/$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) busybox
 	@echo Compile $@
