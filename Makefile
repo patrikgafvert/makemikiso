@@ -1,3 +1,4 @@
+.SILENT:
 SHELL:=$(shell which bash)
 ARCH=x86_64
 ROOT_DIR=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -10,10 +11,10 @@ ROOT_BASE=$(OUT_BASE)root/
 INITRAMFS_FILE=initramfs.cpio.xz
 INITRAMFS_PATHS="/bin" "/dev" "/etc" "/etc/init.d" "/lib" "/lib64" "/mnt" "/mnt/root" "/proc" "/sbin" "/sys" "/home" "/usr" "/usr/bin" "/usr/sbin" "/usr/lib64" "/var"
 DOWNLOADCMD=curl -s -O -L -k
-MAKEOPT=-j$$(nproc)
+MAKEOPT=-j$(shell nproc)
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
-MIKROTIKVER_STABLE=$$(curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -f1 -d' ')
-MIKROTIKVER_TESTING=$$(curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.testing | cut -f1 -d' ')
+MIKROTIKVER_STABLE=$(shell curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -f1 -d' ')
+MIKROTIKVER_TESTING=$(shell curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.testing | cut -f1 -d' ')
 MIKROTIKDEVICE="Mips_boot" "MMipsBoot" "Powerboot" "e500_boot" "440__boot" "tile_boot" "ARM__boot" "ARM64__boot"
 MIKROTIKARCH="-arm" "-arm64" "-mipsbe" "-mmips" "-smips" "-tile" "-ppc" ""
 MIKROTIKURL_ST=https://download.mikrotik.com/routeros/$(MIKROTIKVER_STABLE)/routeros-$(MIKROTIKVER_STABLE)$(device).npk
@@ -557,9 +558,9 @@ stamp/compile-dnsmasq: stamp/fetch-dnsmasq
 stamp/init:
 	echo -n > $(INITRAMFS_BASE)default_cpio_list
 	echo "dir /root 700 0 0" >> $(INITRAMFS_BASE)default_cpio_list
-	$(foreach item,$(INITRAMFS_PATHS),echo "dir $(item) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
+	$(foreach path,$(INITRAMFS_PATHS),echo "dir $(path) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
-	for file in $$($(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full); do echo "slink /$$file /bin/busybox 777 0 0"; done >> $(INITRAMFS_BASE)default_cpio_list
+	$(foreach file,$(shell $(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 777 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)$(INITRAMFS_FILE)
 	@echo Initramfs was created $@
@@ -571,7 +572,7 @@ stamp/fetch-routeros:
 stamp/get-netinstall-bootcode: stamp/compile-dhtest
 	sudo ./netinstall-cli -a 127.0.0.2 routeros-7.15.3.npk & echo $$! > netinstall.pid
 	$(foreach var,$(MIKROTIKDEVICE),sudo src/dhtest-master/dhtest -T 5 -o "$(var)" -i lo;curl -s tftp://127.0.0.1/linux.arm > netinstall_bootcode_$(var);)
-	sudo kill -9 $$(cat netinstall.pid)
+	sudo kill -9 $(shell cat netinstall.pid)
 	rm netinstall.pid
 
 stamp/grub-mkimage:
