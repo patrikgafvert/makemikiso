@@ -305,7 +305,7 @@ guest:*:::::::
 nobody:*:::::::
 endef
 
-define file_resolv
+define file_resolv_conf
 nameserver 8.8.8.8
 nameserver 8.8.4.4
 endef
@@ -423,7 +423,7 @@ KERNEL /boot/bzimage
 INITRD /boot/$(INITRAMFS_FILE)
 endef
 
-export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab
+export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab
 
 all: stamp/makedir stamp/compile stamp/compile-strace stamp/filecopy stamp/init
 
@@ -631,7 +631,7 @@ stamp/group-file:
 	@echo Make file $@
 
 stamp/resolv-file:
-	printf "%s\n" "$$file_resolv" > $(INITRAMFS_BASE)resolv.conf
+	printf "%s\n" "$$file_resolv_conf" > $(INITRAMFS_BASE)resolv.conf
 	@echo Make file $@
 
 stamp/services-file:
