@@ -443,11 +443,13 @@ stamp/fetch-all: stamp/fetch-kernel stamp/fetch-busybox stamp/fetch-xorriso stam
 stamp/fetch-kernel-$(LINUX_VER):
 	cd dist && $(DOWNLOADCMD) $(LINUX_KERNEL_URL)
 	cd src && tar -xf ../dist/$(LINUX_TARBALL)
+	@touch $@
 	@echo Fetch $@
 
 stamp/fetch-busybox:
 	cd dist && $(DOWNLOADCMD) $(BUSYBOX_URL)
 	cd src && tar -xf ../dist/$(BUSYBOX_TARBALL)
+	@touch $@
 	@echo Fetch $@
 
 stamp/fetch-xorriso:
@@ -478,6 +480,7 @@ stamp/fetch-dhtest:
 stamp/fetch-strace:
 	cd dist && $(DOWNLOADCMD) $(STRACE_URL)
 	cd src && tar -xf ../dist/$(STRACE_TARBALL)
+	@touch $@
 	@echo Fetch $@
 
 stamp/fetch-dropbear:
