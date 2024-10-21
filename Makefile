@@ -428,138 +428,139 @@ export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd f
 all: stamp/makedir stamp/compile stamp/compile-strace stamp/filecopy stamp/init
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file
-	@echo Make files $@
+	echo Make files $@
 
 stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox
-	@echo Make $@
+	echo Make $@
 
 stamp/makedir:
+	echo Make dirs $@
 	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE)boot
-	@echo Make dirs $@
 
 stamp/fetch-all: stamp/fetch-kernel stamp/fetch-busybox stamp/fetch-xorriso stamp/fetch-grub stamp/fetch-syslinux stamp/fetch-mtools stamp/fetch-dhtest stamp/fetch-glibc
-	@echo Fetch $@
+	echo Fetch $@
 
 stamp/fetch-kernel-$(LINUX_VER):
+	echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(LINUX_KERNEL_URL)
 	cd src && tar -xf ../dist/$(LINUX_TARBALL)
-	@touch $@
-	@echo Fetch $@
+	touch $@
 
 stamp/fetch-busybox:
+	echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(BUSYBOX_URL)
 	cd src && tar -xf ../dist/$(BUSYBOX_TARBALL)
-	@touch $@
-	@echo Fetch $@
+	touch $@
 
 stamp/fetch-xorriso:
+	echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(XORRISO_URL)
 	cd src && tar -xf ../dist/$(XORRISO_TARBALL)
-	@echo Fetch $@
 
 stamp/fetch-grub:
+	echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(GRUB_URL)
 	cd src && tar -xf ../dist/$(GRUB_TARBALL)
-	@echo Fetch $@
 
 stamp/fetch-syslinux:
+	echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(SYSLINUX_URL)
 	cd src && tar -xf ../dist/$(SYSLINUX_TARBALL)
-	@echo Fetch $@
 
 stamp/fetch-mtools:
+	@echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(MTOOLS_URL)
 	cd src && tar -xf ../dist/$(MTOOLS_TARBALL)
-	@echo Fetch $@
 
 stamp/fetch-dhtest:
+	echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(DHTEST_URL)
 	cd src && tar -xf ../dist/$(DHTEST_TARBALL)
-	@echo Fetch $@
 
 stamp/fetch-strace:
+	echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(STRACE_URL)
 	cd src && tar -xf ../dist/$(STRACE_TARBALL)
 	@touch $@
-	@echo Fetch $@
 
 stamp/fetch-dropbear:
+	echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(DROPBEAR_URL)
 	cd src && tar -xf ../dist/$(DROPBEAR_TARBALL)
-	@echo Fetch $@
 
 stamp/fetch-glibc:
+	echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(GLIBC_URL)
 	cd src && tar -xf ../dist/$(GLIBC_TARBALL)
 	cd src/$(GLIBC_FILE) && mkdir build
-	@echo Fetch $@
 
 stamp/fetch-dnsmasq:
+	echo Fetch $@
 	cd dist && $(DOWNLOADCMD) $(DNSMASQ_URL)
 	cd src && tar -xf ../dist/$(DNSMASQ_TARBALL)
-	@echo Fetch $@
 
 stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
+	echo Compile $@
 	printf "%s\n" "$$file_kernelkconfig" > src/$(LINUX_DIR)mytinyconfig
 	cd src/$(LINUX_DIR) && $(MAKE) distclean
 	cd src/$(LINUX_DIR) && $(MAKE) KCONFIG_ALLCONFIG=mytinyconfig allnoconfig
 	cd src/$(LINUX_DIR) && $(MAKE) $(MAKEOPT)
-	@echo Compile $@
 
 stamp/compile-busybox: stamp/fetch-busybox
+	echo Compile $@
 	cd src/$(BUSYBOX_DIR) && $(MAKE) distclean
 	cd src/$(BUSYBOX_DIR) && $(MAKE) defconfig
 	cd src/$(BUSYBOX_DIR) && sed -i 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
 	cd src/$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) busybox
-	@echo Compile $@
 
 stamp/compile-xorriso: stamp/fetch-xorriso
+	echo Compile $@
 	cd src/$(XORRISO_DIR) && ./configure
 	cd src/$(XORRISO_DIR) && $(MAKE) $(MAKEOPT)
-	@echo Compile $@
 
 stamp/compile-glibc: stamp/fetch-glibc
+	echo Compile $@
 	cd src/$(GLIBC_DIR)/build && ../configure --prefix=$(INITRAMFS_BASE) CFLAGS="-Wno-error -O3"
 	cd src/$(GLIBC_DIR)/build && $(MAKE) $(MAKEOPT)
 	cd src/$(GLIBC_DIR)/build && $(MAKE) install
-	@echo Compile $@
 
 stamp/compile-strace: stamp/fetch-strace
+	echo Compile $@
 	cd src/$(STRACE_DIR) && LDFLAGS='-static -pthread' ./configure
 	cd src/$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
 	cd src/$(STRACE_DIR)/src && strip ./strace
 	cd src/$(STRACE_DIR)/src && cp ./strace $(INITRAMFS_BASE)sbin
-	@echo Compile $@
 
 stamp/compile-grubmbr: stamp/fetch-grub
+	echo Compile $@
 	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
 	cd src/$(GRUB_DIR) && ./configure --target=i386 --with-platform=pc --disable-werror
 	cd src/$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
-	@echo Compile $@
 
 stamp/compile-grubefi: stamp/fetch-grub
+	echo Compile $@
 	#cd src/$(GRUB_DIR) && $(MAKE) clean
 	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
 	cd src/$(GRUB_DIR) && ./configure --target=x86_64 --with-platform=efi --disable-werror --enable-liblzma
 	cd src/$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
-	@echo Compile $@
 
 stamp/compile-dhtest: stamp/fetch-dhtest
+	echo Compile $@
 	cd src/$(DHTEST_DIR) && $(MAKE) $(MAKEOPT)
-	@echo Compile $@
 
 stamp/compile-dropbear: stamp/fetch-dropbear
+	echo Compile $@
 	cd src/$(DROPBEAR_DIR) && ./configure --enable-static
 	cd src/$(DROPBEAR_DIR) && $(MAKE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
-	@$(foreach prog,$(DROPBEAR_PROGRAMS),strip src/$(DROPBEAR_DIR)/$(prog);cp src/$(DROPBEAR_DIR)/$(prog) $(INITRAMFS_BASE)bin;)
-	@echo Compile $@
+	$(foreach prog,$(DROPBEAR_PROGRAMS),strip src/$(DROPBEAR_DIR)/$(prog);cp src/$(DROPBEAR_DIR)/$(prog) $(INITRAMFS_BASE)bin;)
 
 stamp/compile-dnsmasq: stamp/fetch-dnsmasq
+	echo Compile $@
 	cd src/$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT)
 	cd src/$(DNSMASQ_DIR) && cp src/dnsmasq $(INITRAMFS_BASE)sbin
-	@echo Compile $@
 
 stamp/init:
+	echo Initramfs was created $@
 	echo -n > $(INITRAMFS_BASE)default_cpio_list
 	echo "dir /root 700 0 0" >> $(INITRAMFS_BASE)default_cpio_list
 	$(foreach path,$(INITRAMFS_PATHS),echo "dir $(path) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
@@ -567,14 +568,14 @@ stamp/init:
 	$(foreach file,$(shell $(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 777 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)$(INITRAMFS_FILE)
-	@echo Initramfs was created $@
 
 stamp/fetch-routeros:
-	@$(foreach device,$(MIKROTIKARCH),echo $(DOWNLOADCMD) $(MIKROTIKURL_ST);)
-	@$(foreach device,$(MIKROTIKARCH),echo $(DOWNLOADCMD) $(MIKROTIKURL_TE);)
+	$(foreach device,$(MIKROTIKARCH),echo $(DOWNLOADCMD) $(MIKROTIKURL_ST);)
+	$(foreach device,$(MIKROTIKARCH),echo $(DOWNLOADCMD) $(MIKROTIKURL_TE);)
 
 stamp/get-netinstall-bootcode: stamp/compile-dhtest
-	sudo ./netinstall-cli -a 127.0.0.2 routeros-7.15.3.npk & echo $$! > netinstall.pid
+	echo Extract the bootcode.
+	sudo netinstall-cli -a 127.0.0.2 routeros-7.15.3.npk & echo $$! > netinstall.pid
 	$(foreach var,$(MIKROTIKDEVICE),sudo src/dhtest-master/dhtest -T 5 -o "$(var)" -i lo;curl -s tftp://127.0.0.1/linux.arm > netinstall_bootcode_$(var);)
 	sudo kill -9 $(shell cat netinstall.pid)
 	rm netinstall.pid
@@ -584,13 +585,13 @@ stamp/grub-mkimage:
 	cd src/$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio multiboot2 efi_uga efitextmode
 
 stamp/compile-mtools: stamp/fetch-mtools
+	echo Compile $@
 	cd src/$(MTOOLS_DIR) && ./configure
 	cd src/$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
-	@echo Compile $@
 
 stamp/cp_syslinux_files: stamp/fetch-syslinux
-	@$(foreach file,$(SYSLINUX_FILES),cp src/$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
-	@printf "%s\n" "$$file_syslinux_cfg" > $(ROOT_BASE)boot/syslinux/syslinux.cfg
+	$(foreach file,$(SYSLINUX_FILES),cp src/$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
+	printf "%s\n" "$$file_syslinux_cfg" > $(ROOT_BASE)boot/syslinux/syslinux.cfg
 
 stamp/mtools: stamp/fetch-mtools
 	cd src/$(MTOOLS_DIR) && ./mformat -i $(ROOT_BASE)boot/grub/efi.img -C -f 1440 -N 0 ::
@@ -598,73 +599,75 @@ stamp/mtools: stamp/fetch-mtools
 	cd src/$(MTOOLS_DIR) && touch -md "@$(SOURCE_DATE_EPOCH)" $(ROOT_BASE)boot/grub/efi.img
 
 stamp/init-file:
+	echo Make file $@
 	printf "%s\n" "$$file_init" > $(INITRAMFS_BASE)init
-	@echo Make file $@
 
 stamp/issue-file:
+	echo Make file $@
 	printf "%s\n" "$$file_issue" > $(INITRAMFS_BASE)issue
-	@echo Make file $@
 
 stamp/hostname-file:
+	echo Make file $@
 	printf "%s\n" "$$file_hostname" > $(INITRAMFS_BASE)hostname
-	@echo Make file $@
 
 stamp/hosts-file:
+	echo Make file $@
 	printf "%s\n" "$$file_hosts" > $(INITRAMFS_BASE)hosts
-	@echo Make file $@
 
 stamp/nsswitch-file:
+	echo Make file $@
 	printf "%s\n" "$$file_nsswitch_conf" > $(INITRAMFS_BASE)nsswitch.conf
-	@echo Make file $@
 
 stamp/passwd-file:
+	echo Make file $@
 	printf "%s\n" "$$file_passwd" > $(INITRAMFS_BASE)passwd
-	@echo Make file $@
 
 stamp/shadow-file:
+	echo Make file $@
 	printf "%s\n" "$$file_shadow" > $(INITRAMFS_BASE)shadow
-	@echo Make file $@
 
 stamp/inittab-file:
+	echo Make file $@
 	printf "%s\n" "$$file_inittab" > $(INITRAMFS_BASE)inittab
-	@echo Make file $@
 
 stamp/group-file:
+	echo Make file $@
 	printf "%s\n" "$$file_group" > $(INITRAMFS_BASE)group
-	@echo Make file $@
 
 stamp/resolv-file:
+	echo Make file $@
 	printf "%s\n" "$$file_resolv_conf" > $(INITRAMFS_BASE)resolv.conf
-	@echo Make file $@
 
 stamp/services-file:
+	echo Make file $@
 	printf "%s" "$$file_services" | base64 -d | xz -d > $(INITRAMFS_BASE)services
-	@echo Make file $@
 
 stamp/protocols-file:
+	echo Make file $@
 	printf "%s" "$$file_protocols" | base64 -d | xz -d > $(INITRAMFS_BASE)protocols
-	@echo Make file $@
 
 stamp/profile-file:
+	echo Make file $@
 	printf "%s\n" "$$file_profile" > $(INITRAMFS_BASE)profile
-	@echo Make file $@
 
 stamp/rcS-file:
+	echo Make file $@
 	printf "%s\n" "$$file_rcS" > $(INITRAMFS_BASE)rcS
-	@echo Make file $@
 
 stamp/ver:
-	@echo $(MIKROTIKVER_STABLE)
-	@echo $(MIKROTIKVER_TESTING)
+	echo $(MIKROTIKVER_STABLE)
+	echo $(MIKROTIKVER_TESTING)
 
 clean:
 	@echo "Cleaning build ..."
 	$(RM) -r $(SRC_BASE) $(DIST_BASE) $(STAMP_BASE) $(OUT_BASE)
 run:
+	echo 'Run qemu <CTRL><a> <x> to exit.'
 	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage -initrd $(ROOT_BASE)$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
 .PHONY: printvars
+
 printvars:
-	@$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
+	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
 dir:
 	echo $(CURDIR)
