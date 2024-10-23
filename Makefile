@@ -9,8 +9,8 @@ STAMP_BASE=$(ROOT_DIR)stamp/
 INITRAMFS_BASE=$(OUT_BASE)initramfs/
 ROOT_BASE=$(OUT_BASE)root/
 INITRAMFS_FILE=initramfs.cpio.xz
-INITRAMFS_PATHS="/bin" "/dev" "/etc" "/etc/init.d" "/lib" "/lib64" "/mnt" "/mnt/root" "/proc" "/sbin" "/sys" "/home" "/usr" "/usr/bin" "/usr/sbin" "/usr/lib64" "/var"
-INITRAMFS_FILES="/init" "/etc/inittab" "/etc/init.d/rcS" "/etc/passwd" "/etc/shadow" "/etc/group" "/etc/issue" "/etc/hosts" "/etc/hostname" "/etc/services" "/etc/protocols" "/etc/profile" "/etc/resolv.conf" "/etc/nsswitch.conf"
+INITRAMFS_PATHS=/bin /dev /etc /etc/init.d /lib /lib64 /mnt /mnt/root /proc /sbin /sys /home /usr /usr/bin /usr/sbin /usr/lib64 /var
+INITRAMFS_FILES=/init /etc/inittab /etc/init.d/rcS /etc/passwd /etc/shadow /etc/group /etc/issue /etc/hosts /etc/hostname /etc/services /etc/protocols /etc/profile /etc/resolv.conf /etc/nsswitch.conf
 DOWNLOADCMD=curl -s -O -L -k
 MAKEOPT=-j$(shell nproc)
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
@@ -258,8 +258,8 @@ define file_hosts
 endef
 
 define file_default_cpio_list
-file /bin/busybox       $(SRC_BASE)$(BUSYBOX_DIR)busybox        755 0 0
-file /sbin/strace       $(SRC_BASE)$(STRACE_DIR)src/strace      755 0 0
+file /bin/busybox $(SRC_BASE)$(BUSYBOX_DIR)busybox 755 0 0
+file /sbin/strace $(SRC_BASE)$(STRACE_DIR)src/strace 755 0 0
 endef
 
 define file_init
@@ -551,7 +551,7 @@ stamp/init:
 	echo -n > $(INITRAMFS_BASE)default_cpio_list
 	echo "dir /root 700 0 0" >> $(INITRAMFS_BASE)default_cpio_list
 	$(foreach path,$(INITRAMFS_PATHS),echo "dir $(path) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
-	$(foreach file,$(INITRAMFS_FILES),echo "file $(file) $(INITRAMFS_BASE)$(notdir "$(file)") 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
+	$(foreach file,$(INITRAMFS_FILES),echo "file $(file) $(INITRAMFS_BASE)$(notdir $(file)) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
 	$(foreach file,$(shell $(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 777 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
