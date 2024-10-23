@@ -9,6 +9,10 @@ STAMP_BASE=$(ROOT_DIR)stamp/
 INITRAMFS_BASE=$(OUT_BASE)initramfs/
 ROOT_BASE=$(OUT_BASE)root/
 HOSTNAME=netinstall
+IPADDR=10.0.2.15
+DEFGATEW=10.0.2.2
+PRIDNS=8.8.8.8
+SECDNS=8.8.4.4
 INITRAMFS_FILE=initramfs.cpio.xz
 INITRAMFS_PATHS=/bin /dev /etc /etc/init.d /lib /lib64 /mnt /mnt/root /proc /sbin /sys /home /usr /usr/bin /usr/sbin /usr/lib64 /var
 INITRAMFS_FILES=/init /etc/inittab /etc/init.d/rcS /etc/passwd /etc/shadow /etc/group /etc/issue /etc/hosts /etc/hostname /etc/services /etc/protocols /etc/profile /etc/resolv.conf /etc/nsswitch.conf
@@ -115,8 +119,8 @@ define file_rcS
 #!/bin/sh
 ip link set lo up
 ip link set eth0 up
-ip addr add 10.0.2.15/24 brd + dev eth0
-ip route add default via 10.0.2.2
+ip addr add $(IPADDR)/24 brd + dev eth0
+ip route add default via $(DEFGATEW)
 endef
 
 define file_profile
@@ -255,7 +259,7 @@ endef
 
 define file_hosts
 127.0.0.1 localhost.localdomain localhost
-10.0.2.15 $(HOSTNAME).local $(HOSTNAME)
+$(IPADDR) $(HOSTNAME).local $(HOSTNAME)
 endef
 
 define file_default_cpio_list
@@ -294,8 +298,8 @@ nobody:*:::::::
 endef
 
 define file_resolv_conf
-nameserver 8.8.8.8
-nameserver 8.8.4.4
+nameserver $(PRIDNS)
+nameserver $(SECDNS)
 endef
 
 define file_kernelkconfig
