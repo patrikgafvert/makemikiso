@@ -253,8 +253,8 @@ rpc:            files
 endef
 
 define file_hosts
-127.0.0.1	localhost
-127.0.1.1	netinstall
+127.0.0.1 localhost.localdomain localhost
+10.0.2.15 netinstall.local netinstall
 endef
 
 define file_default_cpio_list
