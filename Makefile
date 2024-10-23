@@ -8,6 +8,7 @@ DIST_BASE=$(ROOT_DIR)dist/
 STAMP_BASE=$(ROOT_DIR)stamp/
 INITRAMFS_BASE=$(OUT_BASE)initramfs/
 ROOT_BASE=$(OUT_BASE)root/
+HOSTNAME=netinstall
 INITRAMFS_FILE=initramfs.cpio.xz
 INITRAMFS_PATHS=/bin /dev /etc /etc/init.d /lib /lib64 /mnt /mnt/root /proc /sbin /sys /home /usr /usr/bin /usr/sbin /usr/lib64 /var
 INITRAMFS_FILES=/init /etc/inittab /etc/init.d/rcS /etc/passwd /etc/shadow /etc/group /etc/issue /etc/hosts /etc/hostname /etc/services /etc/protocols /etc/profile /etc/resolv.conf /etc/nsswitch.conf
@@ -107,7 +108,7 @@ define file_issue
 endef
 
 define file_hostname
-netinstall
+$(HOSTNAME)
 endef
 
 define file_rcS
@@ -254,7 +255,7 @@ endef
 
 define file_hosts
 127.0.0.1 localhost.localdomain localhost
-10.0.2.15 netinstall.local netinstall
+10.0.2.15 $(HOSTNAME).local $(HOSTNAME)
 endef
 
 define file_default_cpio_list
