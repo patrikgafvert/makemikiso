@@ -1,6 +1,7 @@
 .SILENT:
 SHELL:=$(shell which bash)
 ARCH=x86_64
+REQUIRED_PROGRAMS = pelle gcc make python3 kalle
 ROOT_DIR=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_BASE=$(ROOT_DIR)out/
 SRC_BASE=$(ROOT_DIR)src/
@@ -32,7 +33,7 @@ MIKROTIK_NETINSTALL_DIR=
 MIKROTIK_NETINSTALL_TARBALL=$(MIKROTIK_NETINSTALL_FILE)$(MIKROTIKVER_STABLE).tar.gz
 MIKROTIK_NETINSTALL_URL=https://download.mikrotik.com/routeros/$(MIKROTIK_NETINSTALL_VER)/$(MIKROTIK_NETINSTALL_TARBALL)
 
-LINUX_VER=6.11.4
+LINUX_VER=6.11.5
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
@@ -125,18 +126,20 @@ endef
 
 define file_profile
 export PS1='[\u@\h \W]\$$ '
+export HOME=/root
 clear
 cat /etc/issue
 echo
 uname -a
 busybox | head -1
 echo
+cd
 endef
 
 define file_inittab
 ::sysinit:/bin/hostname -F /etc/hostname
 ::sysinit:/etc/init.d/rcS
-::respawn:-/bin/sh
+::respawn:-/bin/login
 ::ctrlaltdel:/sbin/reboot
 endef
 
@@ -292,7 +295,7 @@ nobody:x:65534:
 endef
 
 define file_shadow
-root::::::::
+root::20020::::::
 guest:*:::::::
 nobody:*:::::::
 endef
@@ -417,12 +420,12 @@ endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab
 
-all: stamp/makedir stamp/compile stamp/compile-strace stamp/filecopy stamp/init
+all: stamp/makedir stamp/compile stamp/compile-strace-$(STRACE_VER) stamp/filecopy stamp/init
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file
 	$(info $(notdir $@))
 
-stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox
+stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX_VER)
 	$(info $(notdir $@))
 
 stamp/makedir:
@@ -445,55 +448,55 @@ stamp/fetch-busybox-$(BUSYBOX_VER):
 	cd src && tar -xf ../dist/$(BUSYBOX_TARBALL)
 	touch $@
 
-stamp/fetch-xorriso:
+stamp/fetch-xorriso-$(XORRISO_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(XORRISO_URL)
 	cd src && tar -xf ../dist/$(XORRISO_TARBALL)
 	touch $@
 
-stamp/fetch-grub:
+stamp/fetch-grub-$(GRUB_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(GRUB_URL)
 	cd src && tar -xf ../dist/$(GRUB_TARBALL)
 	touch $@
 
-stamp/fetch-syslinux:
+stamp/fetch-syslinux-$(SYSLINUX_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(SYSLINUX_URL)
 	cd src && tar -xf ../dist/$(SYSLINUX_TARBALL)
 	touch $@
 
-stamp/fetch-mtools:
+stamp/fetch-mtools-$(MTOOLS_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(MTOOLS_URL)
 	cd src && tar -xf ../dist/$(MTOOLS_TARBALL)
 	touch $@
 
-stamp/fetch-dhtest:
+stamp/fetch-dhtest-$(DHTEST_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(DHTEST_URL)
 	cd src && tar -xf ../dist/$(DHTEST_TARBALL)
 	touch $@
 
-stamp/fetch-strace:
+stamp/fetch-strace-$(STRACE_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(STRACE_URL)
 	cd src && tar -xf ../dist/$(STRACE_TARBALL)
 	touch $@
 
-stamp/fetch-dropbear:
+stamp/fetch-dropbear-$(DROPBEAR_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(DROPBEAR_URL)
 	cd src && tar -xf ../dist/$(DROPBEAR_TARBALL)
 	touch $@
 
-stamp/fetch-glibc:
+stamp/fetch-glibc-$(GLIBC_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(GLIBC_URL)
 	cd src && tar -xf ../dist/$(GLIBC_TARBALL)
 	touch $@
 
-stamp/fetch-dnsmasq:
+stamp/fetch-dnsmasq-$(DNSMASQ_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(DNSMASQ_URL)
 	cd src && tar -xf ../dist/$(DNSMASQ_TARBALL)
@@ -511,55 +514,62 @@ stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	cd src/$(BUSYBOX_DIR) && $(MAKE) distclean
 	cd src/$(BUSYBOX_DIR) && $(MAKE) defconfig
 	cd src/$(BUSYBOX_DIR) && sed -i 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
+	cd src/$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
+
+
 	cd src/$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) busybox
 
-stamp/compile-xorriso: stamp/fetch-xorriso
+stamp/compile-xorriso-$(XORRISO_VER): stamp/fetch-xorriso-$(XORRISO_VER)
 	$(info $(notdir $@))
 	cd src/$(XORRISO_DIR) && ./configure
 	cd src/$(XORRISO_DIR) && $(MAKE) $(MAKEOPT)
 
-stamp/compile-glibc: stamp/fetch-glibc
+stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
 	cd src/$(GLIBC_DIR) && mkdir build
 	cd src/$(GLIBC_DIR)/build && ../configure --prefix=$(INITRAMFS_BASE) CFLAGS="-Wno-error -O3"
 	cd src/$(GLIBC_DIR)/build && $(MAKE) $(MAKEOPT)
 	cd src/$(GLIBC_DIR)/build && $(MAKE) install
 
-stamp/compile-strace: stamp/fetch-strace
+stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER)
 	$(info $(notdir $@))
 	cd src/$(STRACE_DIR) && LDFLAGS='-static -pthread' ./configure
 	cd src/$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
 	cd src/$(STRACE_DIR)/src && strip ./strace
 	cd src/$(STRACE_DIR)/src && cp ./strace $(INITRAMFS_BASE)sbin
 
-stamp/compile-grubmbr: stamp/fetch-grub
+stamp/compile-grubmbr-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
 	$(info $(notdir $@))
 	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
 	cd src/$(GRUB_DIR) && ./configure --target=i386 --with-platform=pc --disable-werror
 	cd src/$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
 
-stamp/compile-grubefi: stamp/fetch-grub
+stamp/compile-grubefi-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
 	$(info $(notdir $@))
 	#cd src/$(GRUB_DIR) && $(MAKE) clean
 	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
 	cd src/$(GRUB_DIR) && ./configure --target=x86_64 --with-platform=efi --disable-werror --enable-liblzma
 	cd src/$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
 
-stamp/compile-dhtest: stamp/fetch-dhtest
+stamp/compile-dhtest-$(DHTEST_VER): stamp/fetch-dhtest-$(DHTEST_VER)
 	$(info $(notdir $@))
-	echo Compile $@
 	cd src/$(DHTEST_DIR) && $(MAKE) $(MAKEOPT)
 
-stamp/compile-dropbear: stamp/fetch-dropbear
+stamp/compile-dropbear-$(DROPBEAR_VER): stamp/fetch-dropbear-$(DROPBEAR_VER)
 	$(info $(notdir $@))
 	cd src/$(DROPBEAR_DIR) && ./configure --enable-static
 	cd src/$(DROPBEAR_DIR) && $(MAKE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
 	$(foreach prog,$(DROPBEAR_PROGRAMS),strip src/$(DROPBEAR_DIR)/$(prog);cp src/$(DROPBEAR_DIR)/$(prog) $(INITRAMFS_BASE)bin;)
 
-stamp/compile-dnsmasq: stamp/fetch-dnsmasq
+stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER)
 	$(info $(notdir $@))
 	cd src/$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT)
 	cd src/$(DNSMASQ_DIR) && cp src/dnsmasq $(INITRAMFS_BASE)sbin
+
+stamp/compile-mtools-$(MTOOLS_VER): stamp/fetch-mtools-$(MTOOLS_VER)
+	$(info $(notdir $@))
+	cd src/$(MTOOLS_DIR) && ./configure
+	cd src/$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
 
 stamp/init:
 	echo Initramfs was created $@
@@ -587,12 +597,7 @@ stamp/grub-mkimage:
 	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
 	cd src/$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio multiboot2 efi_uga efitextmode
 
-stamp/compile-mtools: stamp/fetch-mtools
-	$(info $(notdir $@))
-	cd src/$(MTOOLS_DIR) && ./configure
-	cd src/$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
-
-stamp/cp_syslinux_files: stamp/fetch-syslinux
+stamp/cp_syslinux_files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 	$(foreach file,$(SYSLINUX_FILES),cp src/$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
 	printf "%s\n" "$$file_syslinux_cfg" > $(ROOT_BASE)boot/syslinux/syslinux.cfg
 
@@ -674,4 +679,10 @@ run:
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
 dir:
-	echo $(CURDIR)
+	$(info $(CURDIR))
+
+test-$(MIKROTIKVER_STABLE):
+	$(info $(MIKROTIKVER_STABLE))
+
+check_tools:
+	@$(foreach prog,$(REQUIRED_PROGRAMS),$(shell command -v $(prog) > /dev/null 2>&1 || { echo >&2 "Error: Please install \"$(prog)\" before running $(MAKEFILE_LIST)."; } ;))
