@@ -265,7 +265,7 @@ $(IPADDR) $(HOSTNAME).local $(HOSTNAME)
 endef
 
 define file_default_cpio_list
-file /bin/busybox $(SRC_BASE)$(BUSYBOX_DIR)busybox 755 0 0
+file /bin/busybox $(SRC_BASE)$(BUSYBOX_DIR)busybox 0755 0 0
 file /sbin/strace $(SRC_BASE)$(STRACE_DIR)src/strace 755 0 0
 endef
 
@@ -513,8 +513,9 @@ stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	cd src/$(BUSYBOX_DIR) && $(MAKE) distclean
 	cd src/$(BUSYBOX_DIR) && $(MAKE) defconfig
 	cd src/$(BUSYBOX_DIR) && sed -i 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
-	cd src/$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
 	cd src/$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
+	cd src/$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
+	cd src/$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_SUID=y/# CONFIG_FEATURE_SUID is not set/' .config
 	cd src/$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) busybox
 
 stamp/compile-xorriso-$(XORRISO_VER): stamp/fetch-xorriso-$(XORRISO_VER)
@@ -576,7 +577,7 @@ stamp/init:
 	$(foreach path,$(INITRAMFS_PATHS),echo "dir $(path) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	$(foreach file,$(INITRAMFS_FILES),echo "file $(file) $(INITRAMFS_BASE)$(notdir $(file)) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
-	$(foreach file,$(shell $(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 777 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
+	$(foreach file,$(shell $(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 0777 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)$(INITRAMFS_FILE)
 
