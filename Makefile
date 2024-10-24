@@ -673,10 +673,6 @@ run:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
 	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage -initrd $(ROOT_BASE)$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
-run-old:
-	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -kernel bzImage -initrd $(ROOT_BASE)$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
-
 run-gui:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
 	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage -initrd $(ROOT_BASE)$(INITRAMFS_FILE) -enable-kvm -cpu host -nic user,model=e1000e
