@@ -682,4 +682,4 @@ test-$(MIKROTIKVER_STABLE):
 	$(info $(MIKROTIKVER_STABLE))
 
 check_tools:
-	@$(foreach prog,$(REQUIRED_PROGRAMS),$(shell command -v $(prog) > /dev/null 2>&1 || { echo >&2 "Error: Please install \"$(prog)\" before running $(MAKEFILE_LIST)."; } ;))
+	$(foreach prog,$(REQUIRED_PROGRAMS),$(shell command -v $(prog) > /dev/null 2>&1 || { echo >&2 "Error: Please install \"$(prog)\" before running $(MAKEFILE_LIST)."; } ;))
