@@ -137,7 +137,7 @@ endef
 define file_inittab
 ::sysinit:/bin/hostname -F /etc/hostname
 ::sysinit:/etc/init.d/rcS
-::respawn:-/bin/login
+::respawn:-/bin/login -f root
 ::ctrlaltdel:/sbin/reboot
 endef
 
@@ -293,7 +293,7 @@ nobody:x:65534:
 endef
 
 define file_shadow
-root::20020::::::
+root::::::::
 guest:*:::::::
 nobody:*:::::::
 endef
