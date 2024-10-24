@@ -126,14 +126,12 @@ endef
 
 define file_profile
 export PS1='[\u@\h \W]\$$ '
-export HOME=/root
 clear
 cat /etc/issue
 echo
 uname -a
 busybox | head -1
 echo
-cd
 endef
 
 define file_inittab
