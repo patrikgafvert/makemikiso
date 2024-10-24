@@ -429,7 +429,7 @@ stamp/makedir:
 	$(info $(notdir $@))
 	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE)boot
 
-stamp/fetch-all: stamp/fetch-kernel-$(LINUX_VER) stamp/fetch-busybox stamp/fetch-xorriso stamp/fetch-grub stamp/fetch-syslinux stamp/fetch-mtools stamp/fetch-dhtest stamp/fetch-glibc
+stamp/fetch-all: stamp/fetch-kernel-$(LINUX_VER) stamp/fetch-busybox-$(BUSYBOX_VER) stamp/fetch-xorriso stamp/fetch-grub stamp/fetch-syslinux stamp/fetch-mtools stamp/fetch-dhtest stamp/fetch-glibc
 	$(info $(notdir $@))
 	touch $@
 
@@ -491,7 +491,6 @@ stamp/fetch-glibc:
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(GLIBC_URL)
 	cd src && tar -xf ../dist/$(GLIBC_TARBALL)
-	cd src/$(GLIBC_FILE) && mkdir build
 	touch $@
 
 stamp/fetch-dnsmasq:
@@ -521,6 +520,7 @@ stamp/compile-xorriso: stamp/fetch-xorriso
 
 stamp/compile-glibc: stamp/fetch-glibc
 	$(info $(notdir $@))
+	cd src/$(GLIBC_DIR) && mkdir build
 	cd src/$(GLIBC_DIR)/build && ../configure --prefix=$(INITRAMFS_BASE) CFLAGS="-Wno-error -O3"
 	cd src/$(GLIBC_DIR)/build && $(MAKE) $(MAKEOPT)
 	cd src/$(GLIBC_DIR)/build && $(MAKE) install
