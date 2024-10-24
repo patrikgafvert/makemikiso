@@ -126,6 +126,7 @@ endef
 
 define file_profile
 export PS1='[\u@\h \W]\$$ '
+export EDITOR='/bin/vi'
 clear
 cat /etc/issue
 echo
