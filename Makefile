@@ -2,6 +2,7 @@
 SHELL:=$(shell which bash)
 ARCH=x86_64
 REQUIRED_PROGRAMS = pelle gcc make python3 kalle
+MISSING_FILES=$(foreach prog,$(REQUIRED_PROGRAMS),$(shell command -v $(prog) > /dev/null 2>&1 || { echo -n >&2 "$(prog) "; } ;))
 ROOT_DIR=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_BASE=$(ROOT_DIR)out/
 SRC_BASE=$(ROOT_DIR)src/
@@ -17,6 +18,7 @@ SECDNS=8.8.4.4
 INITRAMFS_FILE=initramfs.cpio.xz
 INITRAMFS_PATHS=/bin /dev /etc /etc/init.d /lib /lib64 /mnt /mnt/root /proc /sbin /sys /home /usr /usr/bin /usr/sbin /usr/lib64 /var
 INITRAMFS_FILES=/init /etc/inittab /etc/init.d/rcS /etc/passwd /etc/shadow /etc/group /etc/issue /etc/hosts /etc/hostname /etc/services /etc/protocols /etc/profile /etc/resolv.conf /etc/nsswitch.conf
+
 DOWNLOADCMD=curl -s -O -L -k
 MAKEOPT=-j$(shell nproc)
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
@@ -689,3 +691,6 @@ test-$(MIKROTIKVER_STABLE):
 
 check_tools:
 	$(foreach prog,$(REQUIRED_PROGRAMS),$(shell command -v $(prog) > /dev/null 2>&1 || { echo >&2 "Error: Please install \"$(prog)\" before running $(MAKEFILE_LIST)."; } ;))
+
+check_tools-new:
+	$(info $(MISSING_FILES))
