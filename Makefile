@@ -18,7 +18,6 @@ SECDNS=8.8.4.4
 INITRAMFS_FILE=initramfs.cpio.xz
 INITRAMFS_PATHS=/bin /dev /etc /etc/init.d /lib /lib64 /mnt /mnt/root /proc /sbin /sys /home /usr /usr/bin /usr/sbin /usr/lib64 /var
 INITRAMFS_FILES=/init /etc/inittab /etc/init.d/rcS /etc/passwd /etc/shadow /etc/group /etc/issue /etc/hosts /etc/hostname /etc/services /etc/protocols /etc/profile /etc/resolv.conf /etc/nsswitch.conf
-
 DOWNLOADCMD=curl -s -O -L -k
 MAKEOPT=-j$(shell nproc)
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
@@ -267,7 +266,7 @@ $(IPADDR) $(HOSTNAME).local $(HOSTNAME)
 endef
 
 define file_default_cpio_list
-file /bin/busybox $(SRC_BASE)$(BUSYBOX_DIR)busybox 0755 0 0
+file /bin/busybox $(SRC_BASE)$(BUSYBOX_DIR)busybox 755 0 0
 file /sbin/strace $(SRC_BASE)$(STRACE_DIR)src/strace 755 0 0
 endef
 
@@ -275,7 +274,7 @@ define file_init
 #!/bin/sh
 mount -t proc -o noexec,nosuid,nodev proc /proc
 mount -t sysfs -o noexec,nosuid,nodev sysfs /sys
-mount -t devtmpfs -o exec,nosuid,mode=0755,size=2M devtmpfs /dev
+mount -t devtmpfs -o exec,nosuid,mode=755,size=2M devtmpfs /dev
 mkdir -p /dev/shm
 chmod +t /dev/shm
 mount -t tmpfs -o nodev,nosuid,noexec shm /dev/shm
@@ -335,6 +334,7 @@ CONFIG_RSEQ=y
 CONFIG_EXPERT=y
 CONFIG_PRINTK=y
 
+#Do serial devices like ttyS0
 CONFIG_SERIAL_8250=y
 CONFIG_SERIAL_8250_CONSOLE=y
 
@@ -358,6 +358,7 @@ CONFIG_BLK_DEV_INITRD=y
 CONFIG_FILE_LOCKING=y
 CONFIG_CC_OPTIMIZE_FOR_SIZE=y
 
+#Run elf and script files.
 CONFIG_BINFMT_ELF=y
 CONFIG_BINFMT_SCRIPT=y
 
@@ -365,12 +366,18 @@ CONFIG_SYSFS=y
 CONFIG_PROC_FS=y
 CONFIG_PROC_SYSCTL=y
 
+#Create temp file system.
 CONFIG_TMPFS=y
 CONFIG_TMPFS_POSIX_ACL=y
+
+#Auto make /dev and do mount it to /dev
 CONFIG_DEVTMPFS=y
 CONFIG_DEVTMPFS_MOUNT=y
 
+#Do support initramfs copressed with xz
 CONFIG_RD_XZ=y
+
+#Compressed kernel with xz.
 CONFIG_KERNEL_XZ=y
 # CONFIG_HAVE_KERNEL_GZIP is not set
 # CONFIG_HAVE_KERNEL_BZIP2 is not set
@@ -379,6 +386,8 @@ CONFIG_HAVE_KERNEL_XZ=y
 # CONFIG_HAVE_KERNEL_LZO is not set
 # CONFIG_HAVE_KERNEL_LZ4 is not set
 # CONFIG_HAVE_KERNEL_ZSTD is not set
+
+#Put .config file as compressed in proc.
 CONFIG_IKCONFIG=y
 CONFIG_IKCONFIG_PROC=y
 
@@ -577,9 +586,9 @@ stamp/init:
 	echo -n > $(INITRAMFS_BASE)default_cpio_list
 	echo "dir /root 700 0 0" >> $(INITRAMFS_BASE)default_cpio_list
 	$(foreach path,$(INITRAMFS_PATHS),echo "dir $(path) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
-	$(foreach file,$(INITRAMFS_FILES),echo "file $(file) $(INITRAMFS_BASE)$(notdir $(file)) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
+	$(foreach file,$(INITRAMFS_FILES),echo "file $(file) $(INITRAMFS_BASE)$(notdir $(file)) 766 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
-	$(foreach file,$(shell $(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 777 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
+	$(foreach file,$(shell $(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)$(INITRAMFS_FILE)
 
@@ -690,7 +699,5 @@ test-$(MIKROTIKVER_STABLE):
 	$(info $(MIKROTIKVER_STABLE))
 
 check_tools:
-	$(foreach prog,$(REQUIRED_PROGRAMS),$(shell command -v $(prog) > /dev/null 2>&1 || { echo >&2 "Error: Please install \"$(prog)\" before running $(MAKEFILE_LIST)."; } ;))
-
-check_tools-new:
+	$(info "Please install these dependencies"
 	$(info $(MISSING_FILES))
