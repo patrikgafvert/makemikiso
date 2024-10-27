@@ -2,7 +2,7 @@
 SHELL:=$(shell which bash)
 ARCH=x86_64
 REQUIRED_PROGRAMS = pelle gcc make python3 kalle
-MISSING_FILES=$(foreach prog,$(REQUIRED_PROGRAMS),$(shell command -v $(prog) > /dev/null 2>&1 || { echo -n >&2 "$(prog) "; } ;))
+MISSING_FILES=$(foreach prog,$(REQUIRED_PROGRAMS),$(shell command -v $(prog) > /dev/null 2>&1 || echo -n >&2 "$(prog) "))
 ROOT_DIR=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_BASE=$(ROOT_DIR)out/
 SRC_BASE=$(ROOT_DIR)src/
@@ -699,5 +699,5 @@ test-$(MIKROTIKVER_STABLE):
 	$(info $(MIKROTIKVER_STABLE))
 
 check_tools:
-	$(info "Please install these dependencies"
+	$(info Please install these dependencies before running $(MAKEFILE_LIST) again.)
 	$(info $(MISSING_FILES))
