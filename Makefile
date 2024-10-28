@@ -150,10 +150,6 @@ initrd	/boot/$(INITRAMFS_FILE)
 }
 endef
 
-
-
-
-
 define file_inittab
 ::sysinit:/bin/hostname -F /etc/hostname
 ::sysinit:/etc/init.d/rcS
@@ -537,7 +533,7 @@ stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	cd src/$(LINUX_DIR) && $(MAKE) distclean
 	cd src/$(LINUX_DIR) && $(MAKE) KCONFIG_ALLCONFIG=mytinyconfig allnoconfig
 	cd src/$(LINUX_DIR) && $(MAKE) $(MAKEOPT)
-	ln -s $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage $(ROOT_BASE)boot/bzImage
+	[[ -f "$(ROOT_BASE)boot/bzImage" ]] || ln -s $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage $(ROOT_BASE)boot/bzImage
 
 stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	$(info $(notdir $@))
@@ -619,10 +615,10 @@ stamp/grub-mkimage:
 	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
 	cd src/$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio multiboot2 efi_uga efitextmode
 	printf "%s\n" "$$file_grub_cfg" > $(INITRAMFS_BASE)grub_cfg
-	ln -s $(INITRAMFS_BASE)grub_cfg $(ROOT_BASE)boot/grub/grub.cfg
+	[[ -f "$(ROOT_BASE)boot/grub/grub.cfg" ]] || ln -s $(INITRAMFS_BASE)grub_cfg $(ROOT_BASE)boot/grub/grub.cfg
 
 stamp/ln_syslinux_files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
-	$(foreach file,$(SYSLINUX_FILES),ln -s $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
+	$(foreach file,$(SYSLINUX_FILES),[[ -f "$(ROOT_BASE)boot/syslinux/$(notdir $(file))" ]] || ln -s $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
 	printf "%s\n" "$$file_syslinux_cfg" > $(ROOT_BASE)boot/syslinux/syslinux.cfg
 
 stamp/mtools: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools-$(MTOOLS_VER)
@@ -709,8 +705,6 @@ run-gui:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
 	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -enable-kvm -cpu host -nic user,model=e1000e
 
-.PHONY: printvars
-
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
 
@@ -725,5 +719,5 @@ check_tools:
 	$(info $(MISSING_FILES))
 
 make_iso:
-	ln -s $(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso $(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs
-	src/$(XORRISO_DIR)xorriso/xorrisofs -output file.iso -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}/boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
+	[[ -f "$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs" ]] || ln -s $(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso $(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs
+	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs -output file.iso -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}/boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
