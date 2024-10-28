@@ -48,7 +48,7 @@ BUSYBOX_URL=https://busybox.net/downloads/$(BUSYBOX_TARBALL)
 
 XORRISO_VER=1.5.6
 XORRISO_FILE=xorriso-$(XORRISO_VER)
-XORRISO_DIR=$(XORRISO_FILE)
+XORRISO_DIR=$(XORRISO_FILE)/
 XORRISO_TARBALL=$(XORRISO_FILE).pl02.tar.gz
 XORRISO_URL=https://www.gnu.org/software/xorriso/$(XORRISO_TARBALL)
 
@@ -140,6 +140,19 @@ uname -a
 busybox | head -1
 echo
 endef
+
+define file_grub_cfg
+set timeout=1
+
+menuentry "Linux Mikrotik Netinstall" {
+linux	/boot/bzImage
+initrd	/boot/$(INITRAMFS_FILE)
+}
+endef
+
+
+
+
 
 define file_inittab
 ::sysinit:/bin/hostname -F /etc/hostname
@@ -430,11 +443,11 @@ DEFAULT linux
 
 LABEL linux
 MENU LABEL Linux
-KERNEL /boot/bzimage
+KERNEL /boot/bzImage
 INITRD /boot/$(INITRAMFS_FILE)
 endef
 
-export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime
+export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
 
 all: stamp/makedir stamp/compile stamp/compile-strace-$(STRACE_VER) stamp/filecopy stamp/init
 
@@ -605,6 +618,8 @@ stamp/get-netinstall-bootcode: stamp/compile-dhtest
 stamp/grub-mkimage:
 	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
 	cd src/$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio multiboot2 efi_uga efitextmode
+	printf "%s\n" "$$file_grub_cfg" > $(INITRAMFS_BASE)grub_cfg
+	ln -s $(INITRAMFS_BASE)grub_cfg $(ROOT_BASE)boot/grub/grub.cfg
 
 stamp/ln_syslinux_files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 	$(foreach file,$(SYSLINUX_FILES),ln -s $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
@@ -658,6 +673,9 @@ stamp/localtime-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_localtime" > $(INITRAMFS_BASE)localtime
 
+stamp/grub-cfg-file:
+	$(info $(notdir $@))
+
 stamp/services-file:
 	$(info $(notdir $@))
 	printf "%s" "$$file_services" | base64 -d | xz -d > $(INITRAMFS_BASE)services
@@ -705,3 +723,7 @@ test-$(MIKROTIKVER_STABLE):
 check_tools:
 	$(info Please install these dependencies before running $(MAKEFILE_LIST) again.)
 	$(info $(MISSING_FILES))
+
+make_iso:
+	ln -s $(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso $(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs
+	src/$(XORRISO_DIR)xorriso/xorrisofs -output file.iso -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}/boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
