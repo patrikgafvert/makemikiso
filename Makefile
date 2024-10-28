@@ -446,7 +446,7 @@ stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX
 
 stamp/makedir:
 	$(info $(notdir $@))
-	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE){boot,boot/grub,boot/syslinux}
+	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE){boot,boot/grub,boot/syslinux} $(ROOT_BASE){efi,efi/boot}
 
 stamp/fetch-all: stamp/fetch-kernel-$(LINUX_VER) stamp/fetch-busybox-$(BUSYBOX_VER) stamp/fetch-xorriso stamp/fetch-grub stamp/fetch-syslinux stamp/fetch-mtools stamp/fetch-dhtest stamp/fetch-glibc
 	$(info $(notdir $@))
@@ -524,6 +524,7 @@ stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	cd src/$(LINUX_DIR) && $(MAKE) distclean
 	cd src/$(LINUX_DIR) && $(MAKE) KCONFIG_ALLCONFIG=mytinyconfig allnoconfig
 	cd src/$(LINUX_DIR) && $(MAKE) $(MAKEOPT)
+	ln -s $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage $(ROOT_BASE)boot/bzImage
 
 stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	$(info $(notdir $@))
@@ -577,6 +578,7 @@ stamp/compile-mtools-$(MTOOLS_VER): stamp/fetch-mtools-$(MTOOLS_VER)
 	$(info $(notdir $@))
 	cd src/$(MTOOLS_DIR) && ./configure
 	cd src/$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
+	touch $@
 
 stamp/init:
 	$(info $(notdir $@))
@@ -602,16 +604,15 @@ stamp/get-netinstall-bootcode: stamp/compile-dhtest
 
 stamp/grub-mkimage:
 	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
-	cd src/$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio multiboot2 efi_uga efitextmode
+	cd src/$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio multiboot2 efi_uga efitextmode
 
 stamp/ln_syslinux_files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 	$(foreach file,$(SYSLINUX_FILES),ln -s $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
 	printf "%s\n" "$$file_syslinux_cfg" > $(ROOT_BASE)boot/syslinux/syslinux.cfg
 
-stamp/mtools: stamp/fetch-mtools
+stamp/mtools: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools-$(MTOOLS_VER)
 	cd src/$(MTOOLS_DIR) && ./mformat -i $(ROOT_BASE)boot/grub/efi.img -C -f 1440 -N 0 ::
-	cd src/$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(DESTDIR)/efi ::
-	cd src/$(MTOOLS_DIR) && touch -md "@$(SOURCE_DATE_EPOCH)" $(ROOT_BASE)boot/grub/efi.img
+	cd src/$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(ROOT_BASE)efi ::
 
 stamp/init-file:
 	$(info $(notdir $@))
@@ -704,6 +705,3 @@ test-$(MIKROTIKVER_STABLE):
 check_tools:
 	$(info Please install these dependencies before running $(MAKEFILE_LIST) again.)
 	$(info $(MISSING_FILES))
-
-link_files:
-	ln -s $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage $(ROOT_BASE)boot/bzImage
