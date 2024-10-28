@@ -88,6 +88,12 @@ MTOOLS_DIR=$(MTOOLS_FILE)/
 MTOOLS_TARBALL=$(MTOOLS_FILE).tar.gz
 MTOOLS_URL=http://ftp.gnu.org/gnu/mtools/$(MTOOLS_TARBALL)
 
+UNIFONT_VER=16.0.01
+UNIFONT_FILE=unifont-$(UNIFONT_VER).bdf
+UNIFONT_DIR=$(UNIFONT_FILE)/
+UNIFONT_TARBALL=$(UNIFONT_FILE).gz
+UNIFONT_URL=https://ftp.gnu.org/gnu/unifont/unifont-$(UNIFONT_VER)/$(UNIFONT_TARBALL)
+
 FREETYPE_VER=2.13.3
 FREETYPE_FILE=freetype-$(FREETYPE_VER)
 FREETYPE_DIR=$(FREETYPE_FILE)/
@@ -499,8 +505,13 @@ stamp/fetch-grub-$(GRUB_VER):
 stamp/fetch-freetype-$(FREETYPE_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(FREETYPE_URL)
-	$(info $(DOWNLOADCMD) $(FREETYPE_URL))
 	cd src && tar -xf ../dist/$(FREETYPE_TARBALL)
+	touch $@
+
+stamp/fetch-unifont-$(UNIFONT_VER):
+	$(info $(notdir $@))
+	cd dist && $(DOWNLOADCMD) $(UNIFONT_URL)
+	cd src && gunzip ../dist/$(UNIFONT_TARBALL)
 	touch $@
 
 stamp/fetch-syslinux-$(SYSLINUX_VER):
