@@ -10,25 +10,28 @@ DIST_BASE=$(ROOT_DIR)dist/
 STAMP_BASE=$(ROOT_DIR)stamp/
 INITRAMFS_BASE=$(OUT_BASE)initramfs/
 ROOT_BASE=$(OUT_BASE)root/
+
 HOSTNAME=netinstall
 IPADDR=10.0.2.15
 DEFGATEW=10.0.2.2
 PRIDNS=8.8.8.8
 SECDNS=8.8.4.4
+
 KERNEL_FILE=bzImage
 INITRAMFS_FILE=initramfs.cpio.xz
 INITRAMFS_PATHS=/bin /dev /etc /etc/init.d /lib /lib64 /mnt /mnt/root /proc /sbin /sys /home /usr /usr/bin /usr/sbin /usr/lib64 /var
 INITRAMFS_FILES=/init /etc/inittab /etc/init.d/rcS /etc/passwd /etc/shadow /etc/group /etc/issue /etc/hosts /etc/hostname /etc/services /etc/protocols /etc/profile /etc/resolv.conf /etc/nsswitch.conf /etc/localtime
+
 DOWNLOADCMD=curl -s -O -L -k
 MAKEOPT=-j$(shell nproc)
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
+
 MIKROTIKVER_STABLE=$(shell curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -f1 -d' ')
 MIKROTIKVER_TESTING=$(shell curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.testing | cut -f1 -d' ')
 MIKROTIKDEVICE="Mips_boot" "MMipsBoot" "Powerboot" "e500_boot" "440__boot" "tile_boot" "ARM__boot" "ARM64__boot"
 MIKROTIKARCH="-arm" "-arm64" "-mipsbe" "-mmips" "-smips" "-tile" "-ppc" ""
 MIKROTIKURL_ST=https://download.mikrotik.com/routeros/$(MIKROTIKVER_STABLE)/routeros-$(MIKROTIKVER_STABLE)$(device).npk
 MIKROTIKURL_TE=https://download.mikrotik.com/routeros/$(MIKROTIKVER_TESTING)/routeros-$(MIKROTIKVER_TESTING)$(device).npk
-
 MIKROTIK_NETINSTALL_VER=$(MIKROTIKVER_STABLE)
 MIKROTIK_NETINSTALL_FILE=netinstall-
 MIKROTIK_NETINSTALL_DIR=
@@ -142,9 +145,14 @@ busybox | head -1
 echo
 endef
 
+define file_grub_early_cfg
+search --no-floppy --set=root --label "NETINSTALL"
+set prefix=($$root)/boot/grub
+endef
+
 define file_grub_cfg
 set timeout=1
-
+set gfxpayload=text
 menuentry "Linux Mikrotik Netinstall" {
 linux	/boot/$(KERNEL_FILE)
 initrd	/boot/$(INITRAMFS_FILE)
@@ -282,7 +290,7 @@ endef
 
 define file_default_cpio_list
 file /bin/busybox $(SRC_BASE)$(BUSYBOX_DIR)busybox 755 0 0
-file /sbin/strace $(SRC_BASE)$(STRACE_DIR)$(SRC_BASE)strace 755 0 0
+file /sbin/strace $(SRC_BASE)$(STRACE_DIR)src/strace 755 0 0
 endef
 
 define file_init
@@ -426,11 +434,6 @@ CONFIG_NET_VENDOR_INTEL=y
 CONFIG_E1000=y
 CONFIG_E1000E=y
 CONFIG_ETHTOOL_NETLINK=y
-endef
-
-define file_grub_early_cfg
-search --no-floppy --set=root --label "NETINSTALL"
-set prefix=($$root)/boot/grub
 endef
 
 define file_syslinux_cfg
@@ -597,7 +600,7 @@ stamp/init:
 	$(foreach path,$(INITRAMFS_PATHS),echo "dir $(path) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	$(foreach file,$(INITRAMFS_FILES),echo "file $(file) $(INITRAMFS_BASE)$(notdir $(file)) 766 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
-	$(foreach file,$(shell $(ROOT_DIR)$(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
+	$(foreach file,$(shell $(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	cd $(SRC_BASE)$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)boot/$(INITRAMFS_FILE)
 
