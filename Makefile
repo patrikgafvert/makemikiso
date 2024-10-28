@@ -331,6 +331,7 @@ define file_kernelkconfig
 CONFIG_64BIT=y
 CONFIG_IA32_EMULATION=y
 CONFIG_COMPAT_32BIT_TIME=y
+CONFIG_EFI=y
 
 CONFIG_MULTIUSER=y
 CONFIG_UID16=y
@@ -705,11 +706,11 @@ run:
 
 run-iso:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -cdrom file.iso -enable-kvm -cpu host -nic user,model=e1000e -nographic
+	qemu-system-x86_64 -m 2G -cdrom file.iso -enable-kvm -cpu max -nographic
 
 run-iso-efi:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -cdrom file.iso -bios /usr/share/OVMF/OVMF_CODE.fd -enable-kvm -cpu host -nographic
+	qemu-system-x86_64 -m 2G -cdrom file.iso -bios /usr/share/OVMF/OVMF_CODE.fd -enable-kvm -cpu max -nographic
 
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
