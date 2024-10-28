@@ -17,7 +17,7 @@ PRIDNS=8.8.8.8
 SECDNS=8.8.4.4
 INITRAMFS_FILE=initramfs.cpio.xz
 INITRAMFS_PATHS=/bin /dev /etc /etc/init.d /lib /lib64 /mnt /mnt/root /proc /sbin /sys /home /usr /usr/bin /usr/sbin /usr/lib64 /var
-INITRAMFS_FILES=/init /etc/inittab /etc/init.d/rcS /etc/passwd /etc/shadow /etc/group /etc/issue /etc/hosts /etc/hostname /etc/services /etc/protocols /etc/profile /etc/resolv.conf /etc/nsswitch.conf
+INITRAMFS_FILES=/init /etc/inittab /etc/init.d/rcS /etc/passwd /etc/shadow /etc/group /etc/issue /etc/hosts /etc/hostname /etc/services /etc/protocols /etc/profile /etc/resolv.conf /etc/nsswitch.conf /etc/localtime
 DOWNLOADCMD=curl -s -O -L -k
 MAKEOPT=-j$(shell nproc)
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
@@ -103,6 +103,11 @@ DNSMASQ_URL=https://thekelleys.org.uk/dnsmasq/$(DNSMASQ_TARBALL)
 
 define file_extra_deps_lst
 depends bli part_gpt
+endef
+
+define file_localtime
+TZif2UTCTZif2UTC
+UTC0
 endef
 
 define file_issue
@@ -429,11 +434,11 @@ KERNEL /boot/bzimage
 INITRD /boot/$(INITRAMFS_FILE)
 endef
 
-export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab
+export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime
 
 all: stamp/makedir stamp/compile stamp/compile-strace-$(STRACE_VER) stamp/filecopy stamp/init
 
-stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file
+stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file stamp/localtime-file
 	$(info $(notdir $@))
 
 stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX_VER)
@@ -546,17 +551,9 @@ stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER)
 	cd src/$(STRACE_DIR) && LDFLAGS='-static -pthread' ./configure
 	cd src/$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
 	cd src/$(STRACE_DIR)/src && strip ./strace
-	cd src/$(STRACE_DIR)/src && cp ./strace $(INITRAMFS_BASE)sbin
 
-stamp/compile-grubmbr-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
+stamp/compile-grub-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
 	$(info $(notdir $@))
-	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
-	cd src/$(GRUB_DIR) && ./configure --target=i386 --with-platform=pc --disable-werror
-	cd src/$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
-
-stamp/compile-grubefi-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
-	$(info $(notdir $@))
-	#cd src/$(GRUB_DIR) && $(MAKE) clean
 	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
 	cd src/$(GRUB_DIR) && ./configure --target=x86_64 --with-platform=efi --disable-werror --enable-liblzma
 	cd src/$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
@@ -590,7 +587,7 @@ stamp/init:
 	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
 	$(foreach file,$(shell $(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
-	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)$(INITRAMFS_FILE)
+	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)boot/$(INITRAMFS_FILE)
 
 stamp/fetch-routeros:
 	$(foreach device,$(MIKROTIKARCH),echo $(DOWNLOADCMD) $(MIKROTIKURL_ST);)
@@ -656,6 +653,10 @@ stamp/resolv-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_resolv_conf" > $(INITRAMFS_BASE)resolv.conf
 
+stamp/localtime-file:
+	$(info $(notdir $@))
+	printf "%s\n" "$$file_localtime" > $(INITRAMFS_BASE)localtime
+
 stamp/services-file:
 	$(info $(notdir $@))
 	printf "%s" "$$file_services" | base64 -d | xz -d > $(INITRAMFS_BASE)services
@@ -683,11 +684,11 @@ clean:
 
 run:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage -initrd $(ROOT_BASE)$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
+	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)boot/bzImage -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
 run-gui:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage -initrd $(ROOT_BASE)$(INITRAMFS_FILE) -enable-kvm -cpu host -nic user,model=e1000e
+	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -enable-kvm -cpu host -nic user,model=e1000e
 
 .PHONY: printvars
 
@@ -703,3 +704,6 @@ test-$(MIKROTIKVER_STABLE):
 check_tools:
 	$(info Please install these dependencies before running $(MAKEFILE_LIST) again.)
 	$(info $(MISSING_FILES))
+
+link_files:
+	ln -s $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage $(ROOT_BASE)boot/bzImage
