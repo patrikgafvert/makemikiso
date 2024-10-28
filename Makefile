@@ -59,45 +59,45 @@ XORRISO_URL=https://www.gnu.org/software/xorriso/$(XORRISO_TARBALL)
 
 GRUB_VER=2.12
 GRUB_FILE=grub-$(GRUB_VER)
-GRUB_DIR=$(GRUB_FILE)
+GRUB_DIR=$(GRUB_FILE)/
 GRUB_TARBALL=$(GRUB_FILE).tar.xz
 GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
 
 SYSLINUX_VER=6.04-pre1
 SYSLINUX_FILE=syslinux-$(SYSLINUX_VER)
-SYSLINUX_DIR=$(SYSLINUX_FILE)
+SYSLINUX_DIR=$(SYSLINUX_FILE)/
 SYSLINUX_TARBALL=$(SYSLINUX_FILE).tar.xz
 SYSLINUX_URL=https://www.kernel.org/pub/linux/utils/boot/syslinux/Testing/6.04/$(SYSLINUX_TARBALL)
 SYSLINUX_FILES=bios/mbr/isohdpfx.bin bios/core/isolinux.bin bios/com32/elflink/ldlinux/ldlinux.c32 bios/com32/libutil/libutil.c32 bios/com32/lib/libcom32.c32 bios/com32/mboot/mboot.c32
 
 DROPBEAR_VER=2024.85
 DROPBEAR_FILE=DROPBEAR_
-DROPBEAR_DIR=dropbear-$(DROPBEAR_FILE)$(DROPBEAR_VER)
+DROPBEAR_DIR=dropbear-$(DROPBEAR_FILE)$(DROPBEAR_VER)/
 DROPBEAR_TARBALL=$(DROPBEAR_FILE)$(DROPBEAR_VER).tar.gz
 DROPBEAR_URL=https://github.com/mkj/dropbear/archive/refs/tags/$(DROPBEAR_TARBALL)
 
 GLIBC_VER=2.40
 GLIBC_FILE=glibc-$(GLIBC_VER)
-GLIBC_DIR=$(GLIBC_FILE)
+GLIBC_DIR=$(GLIBC_FILE)/
 GLIBC_TARBALL=$(GLIBC_FILE).tar.xz
 GLIBC_URL=https://ftp.gnu.org/gnu/glibc/$(GLIBC_TARBALL)
 
 MTOOLS_VER=4.0.44
 MTOOLS_FILE=mtools-$(MTOOLS_VER)
-MTOOLS_DIR=$(MTOOLS_FILE)
+MTOOLS_DIR=$(MTOOLS_FILE)/
 MTOOLS_TARBALL=$(MTOOLS_FILE).tar.gz
 MTOOLS_URL=http://ftp.gnu.org/gnu/mtools/$(MTOOLS_TARBALL)
 
 FREETYPE_VER=2.13.3
 FREETYPE_FILE=freetype-$(FREETYPE_VER)
-FREETYPE_DIR=$(FREETYPE_FILE)
+FREETYPE_DIR=$(FREETYPE_FILE)/
 FREETYPE_TARBALL=$(FREETYPE_FILE).tar.xz
 FREETYPE_URL=https://download.savannah.gnu.org/releases/freetype/$(FREETYPE_TARBALL)
 
 DHTEST_VER=v1.5
 DHTEST_FILE=master
 DHTEST_TARBALL=$(DHTEST_FILE).tar.gz
-DHTEST_DIR=dhtest-master
+DHTEST_DIR=dhtest-master/
 DHTEST_URL=https://github.com/saravana815/dhtest/archive/$(DHTEST_TARBALL)
 
 STRACE_VER=6.11
@@ -109,7 +109,7 @@ STRACE_URL=https://github.com/strace/strace/releases/download/v$(STRACE_VER)/$(S
 DNSMASQ_VER=2.90
 DNSMASQ_FILE=dnsmasq-$(DNSMASQ_VER)
 DNSMASQ_TARBALL=$(DNSMASQ_FILE).tar.xz
-DNSMASQ_DIR=$(DNSMASQ_FILE)
+DNSMASQ_DIR=$(DNSMASQ_FILE)/
 DNSMASQ_URL=https://thekelleys.org.uk/dnsmasq/$(DNSMASQ_TARBALL)
 
 define file_extra_deps_lst
@@ -588,7 +588,7 @@ stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER)
 stamp/compile-grub-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
-	cd $(SRC_BASE)$(GRUB_DIR) && ./configure --target=x86_64 --with-platform=efi --disable-werror --enable-liblzma
+	cd $(SRC_BASE)$(GRUB_DIR) && ./configure --enable-grub-mkfont --enable-target=x86_64 --with-platform=efi --disable-werror --enable-liblzma FREETYPE_CFLAGS="-I $(SRC_BASE)$(FREETYPE_DIR)include" FREETYPE_LIBS="-L $(SRC_BASE)$(FREETYPE_DIR)objs/.libs -lfreetype"
 	cd $(SRC_BASE)$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
 
 stamp/compile-dhtest-$(DHTEST_VER): stamp/fetch-dhtest-$(DHTEST_VER)
