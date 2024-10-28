@@ -153,7 +153,7 @@ endef
 define file_grub_cfg
 set timeout=1
 menuentry "Linux Mikrotik Netinstall" {
-linux	/boot/$(KERNEL_FILE) console=/dev/ttyS0
+linux	/boot/$(KERNEL_FILE)
 initrd	/boot/$(INITRAMFS_FILE)
 }
 endef
@@ -617,8 +617,7 @@ stamp/get-netinstall-bootcode: stamp/compile-dhtest
 stamp/grub-mkimage:
 	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
 	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio multiboot2 efi_uga efitextmode
-	printf "%s\n" "$$file_grub_cfg" > $(INITRAMFS_BASE)grub_cfg
-	[[ -f "$(ROOT_BASE)boot/grub/grub.cfg" ]] || ln -s $(INITRAMFS_BASE)grub_cfg $(ROOT_BASE)boot/grub/grub.cfg
+	printf "%s\n" "$$file_grub_cfg" > $(ROOT_BASE)boot/grub/grub.cfg
 
 stamp/ln_syslinux_files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 	$(foreach file,$(SYSLINUX_FILES),[[ -f "$(ROOT_BASE)boot/syslinux/$(notdir $(file))" ]] || ln -s $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
@@ -710,7 +709,7 @@ run-iso:
 
 run-iso-efi:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -cdrom file.iso -bios /usr/share/OVMF/OVMF_CODE.fd -enable-kvm -cpu host -nic user,model=e1000e -nographic
+	qemu-system-x86_64 -m 2G -cdrom file.iso -bios /usr/share/OVMF/OVMF_CODE.fd -enable-kvm -cpu host -nographic
 
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
