@@ -15,6 +15,7 @@ IPADDR=10.0.2.15
 DEFGATEW=10.0.2.2
 PRIDNS=8.8.8.8
 SECDNS=8.8.4.4
+KERNEL_FILE=bzImage
 INITRAMFS_FILE=initramfs.cpio.xz
 INITRAMFS_PATHS=/bin /dev /etc /etc/init.d /lib /lib64 /mnt /mnt/root /proc /sbin /sys /home /usr /usr/bin /usr/sbin /usr/lib64 /var
 INITRAMFS_FILES=/init /etc/inittab /etc/init.d/rcS /etc/passwd /etc/shadow /etc/group /etc/issue /etc/hosts /etc/hostname /etc/services /etc/protocols /etc/profile /etc/resolv.conf /etc/nsswitch.conf /etc/localtime
@@ -145,7 +146,7 @@ define file_grub_cfg
 set timeout=1
 
 menuentry "Linux Mikrotik Netinstall" {
-linux	/boot/bzImage
+linux	/boot/$(KERNEL_FILE)
 initrd	/boot/$(INITRAMFS_FILE)
 }
 endef
@@ -439,7 +440,7 @@ DEFAULT linux
 
 LABEL linux
 MENU LABEL Linux
-KERNEL /boot/bzImage
+KERNEL /boot/$(KERNEL_FILE)
 INITRD /boot/$(INITRAMFS_FILE)
 endef
 
@@ -533,7 +534,7 @@ stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) distclean
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) KCONFIG_ALLCONFIG=mytinyconfig allnoconfig
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) $(MAKEOPT)
-	[[ -f "$(ROOT_BASE)boot/bzImage" ]] || ln -s $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage $(ROOT_BASE)boot/bzImage
+	[[ -f "$(ROOT_BASE)boot/$(KERNEL_FILE)" ]] || ln -s $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) $(ROOT_BASE)boot/$(KERNEL_FILE)
 
 stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	$(info $(notdir $@))
@@ -699,11 +700,11 @@ clean:
 
 run:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)boot/bzImage -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
+	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)boot/$(KERNEL_FILE) -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
 run-gui:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -enable-kvm -cpu host -nic user,model=e1000e
+	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -enable-kvm -cpu host -nic user,model=e1000e
 
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
