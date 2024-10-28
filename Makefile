@@ -281,7 +281,7 @@ endef
 
 define file_default_cpio_list
 file /bin/busybox $(SRC_BASE)$(BUSYBOX_DIR)busybox 755 0 0
-file /sbin/strace $(SRC_BASE)$(STRACE_DIR)src/strace 755 0 0
+file /sbin/strace $(SRC_BASE)$(STRACE_DIR)$(SRC_BASE)strace 755 0 0
 endef
 
 define file_init
@@ -529,64 +529,64 @@ stamp/fetch-dnsmasq-$(DNSMASQ_VER):
 
 stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_kernelkconfig" > src/$(LINUX_DIR)mytinyconfig
-	cd src/$(LINUX_DIR) && $(MAKE) distclean
-	cd src/$(LINUX_DIR) && $(MAKE) KCONFIG_ALLCONFIG=mytinyconfig allnoconfig
-	cd src/$(LINUX_DIR) && $(MAKE) $(MAKEOPT)
+	printf "%s\n" "$$file_kernelkconfig" > $(SRC_BASE)$(LINUX_DIR)mytinyconfig
+	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) distclean
+	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) KCONFIG_ALLCONFIG=mytinyconfig allnoconfig
+	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) $(MAKEOPT)
 	[[ -f "$(ROOT_BASE)boot/bzImage" ]] || ln -s $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/bzImage $(ROOT_BASE)boot/bzImage
 
 stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	$(info $(notdir $@))
-	cd src/$(BUSYBOX_DIR) && $(MAKE) distclean
-	cd src/$(BUSYBOX_DIR) && $(MAKE) defconfig
-	cd src/$(BUSYBOX_DIR) && sed -i 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
-	cd src/$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
-	cd src/$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
-	cd src/$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) busybox
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) distclean
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) defconfig
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) busybox
 
 stamp/compile-xorriso-$(XORRISO_VER): stamp/fetch-xorriso-$(XORRISO_VER)
 	$(info $(notdir $@))
-	cd src/$(XORRISO_DIR) && ./configure
-	cd src/$(XORRISO_DIR) && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(XORRISO_DIR) && ./configure
+	cd $(SRC_BASE)$(XORRISO_DIR) && $(MAKE) $(MAKEOPT)
 
 stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
-	cd src/$(GLIBC_DIR) && mkdir build
-	cd src/$(GLIBC_DIR)/build && ../configure --prefix=$(INITRAMFS_BASE) CFLAGS="-Wno-error -O3"
-	cd src/$(GLIBC_DIR)/build && $(MAKE) $(MAKEOPT)
-	cd src/$(GLIBC_DIR)/build && $(MAKE) install
+	cd $(SRC_BASE)$(GLIBC_DIR) && mkdir build
+	cd $(SRC_BASE)$(GLIBC_DIR)/build && ../configure --prefix=$(INITRAMFS_BASE) CFLAGS="-Wno-error -O3"
+	cd $(SRC_BASE)$(GLIBC_DIR)/build && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(GLIBC_DIR)/build && $(MAKE) install
 
 stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER)
 	$(info $(notdir $@))
-	cd src/$(STRACE_DIR) && LDFLAGS='-static -pthread' ./configure
-	cd src/$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
-	cd src/$(STRACE_DIR)/src && strip ./strace
+	cd $(SRC_BASE)$(STRACE_DIR) && LDFLAGS='-static -pthread' ./configure
+	cd $(SRC_BASE)$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(STRACE_DIR)/src && strip ./strace
 
 stamp/compile-grub-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
 	$(info $(notdir $@))
-	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
-	cd src/$(GRUB_DIR) && ./configure --target=x86_64 --with-platform=efi --disable-werror --enable-liblzma
-	cd src/$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
+	cd $(SRC_BASE)$(GRUB_DIR) && ./configure --target=x86_64 --with-platform=efi --disable-werror --enable-liblzma
+	cd $(SRC_BASE)$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
 
 stamp/compile-dhtest-$(DHTEST_VER): stamp/fetch-dhtest-$(DHTEST_VER)
 	$(info $(notdir $@))
-	cd src/$(DHTEST_DIR) && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(DHTEST_DIR) && $(MAKE) $(MAKEOPT)
 
 stamp/compile-dropbear-$(DROPBEAR_VER): stamp/fetch-dropbear-$(DROPBEAR_VER)
 	$(info $(notdir $@))
-	cd src/$(DROPBEAR_DIR) && ./configure --enable-static
-	cd src/$(DROPBEAR_DIR) && $(MAKE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
-	$(foreach prog,$(DROPBEAR_PROGRAMS),strip src/$(DROPBEAR_DIR)/$(prog);cp src/$(DROPBEAR_DIR)/$(prog) $(INITRAMFS_BASE)bin;)
+	cd $(SRC_BASE)$(DROPBEAR_DIR) && ./configure --enable-static
+	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
+	$(foreach prog,$(DROPBEAR_PROGRAMS),strip $(SRC_BASE)$(DROPBEAR_DIR)/$(prog);cp $(SRC_BASE)$(DROPBEAR_DIR)/$(prog) $(INITRAMFS_BASE)bin;)
 
 stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER)
 	$(info $(notdir $@))
-	cd src/$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT)
-	cd src/$(DNSMASQ_DIR) && cp src/dnsmasq $(INITRAMFS_BASE)sbin
+	cd $(SRC_BASE)$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(DNSMASQ_DIR) && cp $(SRC_BASE)dnsmasq $(INITRAMFS_BASE)sbin
 
 stamp/compile-mtools-$(MTOOLS_VER): stamp/fetch-mtools-$(MTOOLS_VER)
 	$(info $(notdir $@))
-	cd src/$(MTOOLS_DIR) && ./configure
-	cd src/$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(MTOOLS_DIR) && ./configure
+	cd $(SRC_BASE)$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
 	touch $@
 
 stamp/init:
@@ -596,8 +596,8 @@ stamp/init:
 	$(foreach path,$(INITRAMFS_PATHS),echo "dir $(path) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	$(foreach file,$(INITRAMFS_FILES),echo "file $(file) $(INITRAMFS_BASE)$(notdir $(file)) 766 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
-	$(foreach file,$(shell $(ROOT_DIR)src/$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
-	cd src/$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
+	$(foreach file,$(shell $(ROOT_DIR)$(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
+	cd $(SRC_BASE)$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)boot/$(INITRAMFS_FILE)
 
 stamp/fetch-routeros:
@@ -607,13 +607,13 @@ stamp/fetch-routeros:
 stamp/get-netinstall-bootcode: stamp/compile-dhtest
 	$(info $(notdir $@))
 	sudo netinstall-cli -a 127.0.0.2 routeros-7.15.3.npk & echo $$! > netinstall.pid
-	$(foreach var,$(MIKROTIKDEVICE),sudo src/dhtest-master/dhtest -T 5 -o "$(var)" -i lo;curl -s tftp://127.0.0.1/linux.arm > netinstall_bootcode_$(var);)
+	$(foreach var,$(MIKROTIKDEVICE),sudo $(SRC_BASE)dhtest-master/dhtest -T 5 -o "$(var)" -i lo;curl -s tftp://127.0.0.1/linux.arm > netinstall_bootcode_$(var);)
 	sudo kill -9 $(shell cat netinstall.pid)
 	rm netinstall.pid
 
 stamp/grub-mkimage:
-	cd src/$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
-	cd src/$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio multiboot2 efi_uga efitextmode
+	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
+	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio multiboot2 efi_uga efitextmode
 	printf "%s\n" "$$file_grub_cfg" > $(INITRAMFS_BASE)grub_cfg
 	[[ -f "$(ROOT_BASE)boot/grub/grub.cfg" ]] || ln -s $(INITRAMFS_BASE)grub_cfg $(ROOT_BASE)boot/grub/grub.cfg
 
@@ -622,8 +622,8 @@ stamp/ln_syslinux_files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 	printf "%s\n" "$$file_syslinux_cfg" > $(ROOT_BASE)boot/syslinux/syslinux.cfg
 
 stamp/mtools: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools-$(MTOOLS_VER)
-	cd src/$(MTOOLS_DIR) && ./mformat -i $(ROOT_BASE)boot/grub/efi.img -C -f 1440 -N 0 ::
-	cd src/$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(ROOT_BASE)efi ::
+	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mformat -i $(ROOT_BASE)boot/grub/efi.img -C -f 1440 -N 0 ::
+	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(ROOT_BASE)efi ::
 
 stamp/init-file:
 	$(info $(notdir $@))
