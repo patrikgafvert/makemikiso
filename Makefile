@@ -1,6 +1,7 @@
 .SILENT:
 SHELL:=$(shell which bash)
 ARCH=x86_64
+ISO_FILE=file.iso
 REQUIRED_PROGRAMS = pelle gcc make python3 kalle
 MISSING_FILES=$(foreach prog,$(REQUIRED_PROGRAMS),$(shell command -v $(prog) > /dev/null 2>&1 || echo -n >&2 "$(prog) "))
 ROOT_DIR=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -706,11 +707,11 @@ run:
 
 run-iso:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -cdrom file.iso -enable-kvm -cpu max -nographic
+	qemu-system-x86_64 -m 2G -cdrom $(ISO_FILE) -enable-kvm -cpu max -nographic
 
 run-iso-efi:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -cdrom file.iso -bios /usr/share/OVMF/OVMF_CODE.fd -enable-kvm -cpu max -nographic
+	qemu-system-x86_64 -m 2G -cdrom $(ISO_FILE) -bios /usr/share/OVMF/OVMF_CODE.fd -enable-kvm -cpu max -nographic
 
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
@@ -727,4 +728,4 @@ check_tools:
 
 make_iso:
 	[[ -f "$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs" ]] || ln -s $(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso $(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs
-	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs -output file.iso -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}/boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
+	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs -output $(ISO_FILE) -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}/boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
