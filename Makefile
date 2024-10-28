@@ -152,9 +152,8 @@ endef
 
 define file_grub_cfg
 set timeout=1
-set gfxpayload=text
 menuentry "Linux Mikrotik Netinstall" {
-linux	/boot/$(KERNEL_FILE)
+linux	/boot/$(KERNEL_FILE) console=/dev/ttyS0
 initrd	/boot/$(INITRAMFS_FILE)
 }
 endef
@@ -705,9 +704,13 @@ run:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
 	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)boot/$(KERNEL_FILE) -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
-run-gui:
+run-iso:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -enable-kvm -cpu host -nic user,model=e1000e
+	qemu-system-x86_64 -m 2G -cdrom file.iso -enable-kvm -cpu host -nic user,model=e1000e -nographic
+
+run-iso-efi:
+	$(info "Run qemu <CTRL><a> <x> to exit.")
+	qemu-system-x86_64 -m 2G -cdrom file.iso -bios /usr/share/OVMF/OVMF_CODE.fd -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
