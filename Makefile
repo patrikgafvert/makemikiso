@@ -88,6 +88,12 @@ MTOOLS_DIR=$(MTOOLS_FILE)
 MTOOLS_TARBALL=$(MTOOLS_FILE).tar.gz
 MTOOLS_URL=http://ftp.gnu.org/gnu/mtools/$(MTOOLS_TARBALL)
 
+FREETYPE_VER=2.13.3
+FREETYPE_FILE=freetype-$(FREETYPE_VER)
+FREETYPE_DIR=$(FREETYPE_FILE)
+FREETYPE_TARBALL=$(FREETYPE_FILE).tar.xz
+FREETYPE_URL=https://download.savannah.gnu.org/releases/freetype/$(FREETYPE_TARBALL)
+
 DHTEST_VER=v1.5
 DHTEST_FILE=master
 DHTEST_TARBALL=$(DHTEST_FILE).tar.gz
@@ -490,6 +496,13 @@ stamp/fetch-grub-$(GRUB_VER):
 	cd src && tar -xf ../dist/$(GRUB_TARBALL)
 	touch $@
 
+stamp/fetch-freetype-$(FREETYPE_VER):
+	$(info $(notdir $@))
+	cd dist && $(DOWNLOADCMD) $(FREETYPE_URL)
+	$(info $(DOWNLOADCMD) $(FREETYPE_URL))
+	cd src && tar -xf ../dist/$(FREETYPE_TARBALL)
+	touch $@
+
 stamp/fetch-syslinux-$(SYSLINUX_VER):
 	$(info $(notdir $@))
 	cd dist && $(DOWNLOADCMD) $(SYSLINUX_URL)
@@ -553,6 +566,11 @@ stamp/compile-xorriso-$(XORRISO_VER): stamp/fetch-xorriso-$(XORRISO_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(XORRISO_DIR) && ./configure
 	cd $(SRC_BASE)$(XORRISO_DIR) && $(MAKE) $(MAKEOPT)
+
+stamp/compile-freetype-$(FREETYPE_VER): stamp/fetch-freetype-$(FREETYPE_VER)
+	$(info $(notdir $@))
+	cd $(SRC_BASE)$(FREETYPE_DIR) && ./configure
+	cd $(SRC_BASE)$(FREETYPE_DIR) && $(MAKE) $(MAKEOPT)
 
 stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
