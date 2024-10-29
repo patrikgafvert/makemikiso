@@ -39,6 +39,13 @@ MIKROTIK_NETINSTALL_DIR=
 MIKROTIK_NETINSTALL_TARBALL=$(MIKROTIK_NETINSTALL_FILE)$(MIKROTIKVER_STABLE).tar.gz
 MIKROTIK_NETINSTALL_URL=https://download.mikrotik.com/routeros/$(MIKROTIK_NETINSTALL_VER)/$(MIKROTIK_NETINSTALL_TARBALL)
 
+GRUB_VER=2.12
+GRUB_FILE=grub-$(GRUB_VER)
+GRUB_DIR=$(GRUB_FILE)/
+GRUB_TARBALL=$(GRUB_FILE).tar.xz
+GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
+GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label fat iso9660 cat echo ls test true help gzio multiboot2 efi_gop efi_uga
+
 LINUX_VER=6.11.5
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
@@ -56,12 +63,6 @@ XORRISO_FILE=xorriso-$(XORRISO_VER)
 XORRISO_DIR=$(XORRISO_FILE)/
 XORRISO_TARBALL=$(XORRISO_FILE).pl02.tar.gz
 XORRISO_URL=https://www.gnu.org/software/xorriso/$(XORRISO_TARBALL)
-
-GRUB_VER=2.12
-GRUB_FILE=grub-$(GRUB_VER)
-GRUB_DIR=$(GRUB_FILE)/
-GRUB_TARBALL=$(GRUB_FILE).tar.xz
-GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
 
 SYSLINUX_VER=6.04-pre1
 SYSLINUX_FILE=syslinux-$(SYSLINUX_VER)
@@ -463,7 +464,7 @@ endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
 
-all: stamp/makedir stamp/compile stamp/compile-strace-$(STRACE_VER) stamp/filecopy stamp/init stamp/compile-freetype-$(FREETYPE_VER) stamp/mtools stamp/compile-grub-$(GRUB_VER) stamp/ln_syslinux_files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/grub-mkimage stamp/make_iso
+all: stamp/makedir stamp/compile stamp/compile-strace-$(STRACE_VER) stamp/filecopy stamp/init stamp/compile-freetype-$(FREETYPE_VER) stamp/mtools stamp/compile-grub-$(GRUB_VER) stamp/ln_syslinux_files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/grub-mkimage stamp/make-iso
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file stamp/localtime-file
 	$(info $(notdir $@))
@@ -655,7 +656,7 @@ stamp/get-netinstall-bootcode: stamp/compile-dhtest
 stamp/grub-mkimage: stamp/fetch-grub-$(GRUB_VER) stamp/compile-grub-$(GRUB_VER) stamp/fetch-unifont-$(UNIFONT_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
-	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label fat iso9660 cat echo ls test true help gzio multiboot2 efi_gop efi_uga font 
+	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" $(GRUB_MODULES)
 	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkfont -o $(ROOT_BASE)boot/grub/unifont.pf2 $(DIST_BASE)unifont-16.0.01.bdf
 	printf "%s\n" "$$file_grub_cfg" > $(ROOT_BASE)boot/grub/grub.cfg
 
@@ -743,7 +744,7 @@ stamp/rcS-file:
 	printf "%s\n" "$$file_rcS" > $(INITRAMFS_BASE)rcS
 	touch $@
 
-stamp/make_iso:
+stamp/make-iso:
 	[[ -f "$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs" ]] || ln -s $(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso $(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs
 	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs -output $(ISO_FILE) -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}/boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
 
