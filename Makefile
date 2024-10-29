@@ -462,20 +462,19 @@ endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
 
-all: stamp/makedir stamp/compile stamp/compile-strace-$(STRACE_VER) stamp/filecopy stamp/init
+all: stamp/makedir stamp/compile stamp/compile-strace-$(STRACE_VER) stamp/filecopy stamp/init stamp/compile-freetype-$(FREETYPE_VER) stamp/compile-mtools-$(MTOOLS_VER)
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file stamp/localtime-file
 	$(info $(notdir $@))
+	touch $@
 
 stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX_VER)
 	$(info $(notdir $@))
+	touch $@
 
 stamp/makedir:
 	$(info $(notdir $@))
 	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE){boot,boot/grub,boot/syslinux} $(ROOT_BASE){efi,efi/boot}
-
-stamp/fetch-all: stamp/fetch-kernel-$(LINUX_VER) stamp/fetch-busybox-$(BUSYBOX_VER) stamp/fetch-xorriso stamp/fetch-grub stamp/fetch-syslinux stamp/fetch-mtools stamp/fetch-dhtest stamp/fetch-glibc
-	$(info $(notdir $@))
 	touch $@
 
 stamp/fetch-kernel-$(LINUX_VER):
@@ -563,6 +562,7 @@ stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) KCONFIG_ALLCONFIG=mytinyconfig allnoconfig
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) $(MAKEOPT)
 	[[ -f "$(ROOT_BASE)boot/$(KERNEL_FILE)" ]] || ln -s $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) $(ROOT_BASE)boot/$(KERNEL_FILE)
+	touch $@
 
 stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	$(info $(notdir $@))
@@ -572,16 +572,19 @@ stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) busybox
+	touch $@
 
 stamp/compile-xorriso-$(XORRISO_VER): stamp/fetch-xorriso-$(XORRISO_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(XORRISO_DIR) && ./configure
 	cd $(SRC_BASE)$(XORRISO_DIR) && $(MAKE) $(MAKEOPT)
+	touch $@
 
 stamp/compile-freetype-$(FREETYPE_VER): stamp/fetch-freetype-$(FREETYPE_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(FREETYPE_DIR) && ./configure
 	cd $(SRC_BASE)$(FREETYPE_DIR) && $(MAKE) $(MAKEOPT)
+	touch $@
 
 stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
@@ -595,12 +598,14 @@ stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER)
 	cd $(SRC_BASE)$(STRACE_DIR) && LDFLAGS='-static -pthread' ./configure
 	cd $(SRC_BASE)$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(STRACE_DIR)src && strip ./strace
+	touch $@
 
 stamp/compile-grub-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
 	cd $(SRC_BASE)$(GRUB_DIR) && ./configure --enable-grub-mkfont --enable-target=x86_64 --with-platform=efi --disable-werror --enable-liblzma FREETYPE_CFLAGS="-I $(SRC_BASE)$(FREETYPE_DIR)include" FREETYPE_LIBS="-L $(SRC_BASE)$(FREETYPE_DIR)objs/.libs -lfreetype"
 	cd $(SRC_BASE)$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
+	touch $@
 
 stamp/compile-dhtest-$(DHTEST_VER): stamp/fetch-dhtest-$(DHTEST_VER)
 	$(info $(notdir $@))
@@ -633,6 +638,7 @@ stamp/init:
 	$(foreach file,$(shell $(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	cd $(SRC_BASE)$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)boot/$(INITRAMFS_FILE)
+	touch $@
 
 stamp/fetch-routeros:
 	$(foreach device,$(MIKROTIKARCH),echo $(DOWNLOADCMD) $(MIKROTIKURL_ST);)
@@ -649,10 +655,12 @@ stamp/grub-mkimage:
 	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
 	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" all_video disk part_gpt part_msdos linux normal configfile search search_label efi_gop fat iso9660 cat echo ls test true help gzio multiboot2 efi_uga efitextmode
 	printf "%s\n" "$$file_grub_cfg" > $(ROOT_BASE)boot/grub/grub.cfg
+	touch $@
 
 stamp/ln_syslinux_files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 	$(foreach file,$(SYSLINUX_FILES),[[ -f "$(ROOT_BASE)boot/syslinux/$(notdir $(file))" ]] || ln -s $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
 	printf "%s\n" "$$file_syslinux_cfg" > $(ROOT_BASE)boot/syslinux/syslinux.cfg
+	touch $@
 
 stamp/mtools: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools-$(MTOOLS_VER)
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mformat -i $(ROOT_BASE)boot/grub/efi.img -C -f 1440 -N 0 ::
@@ -661,65 +669,77 @@ stamp/mtools: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools-$(MTOOLS_VER
 stamp/init-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_init" > $(INITRAMFS_BASE)init
+	touch $@
 
 stamp/issue-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_issue" > $(INITRAMFS_BASE)issue
+	touch $@
 
 stamp/hostname-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_hostname" > $(INITRAMFS_BASE)hostname
+	touch $@
 
 stamp/hosts-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_hosts" > $(INITRAMFS_BASE)hosts
+	touch $@
 
 stamp/nsswitch-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_nsswitch_conf" > $(INITRAMFS_BASE)nsswitch.conf
+	touch $@
 
 stamp/passwd-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_passwd" > $(INITRAMFS_BASE)passwd
+	touch $@
 
 stamp/shadow-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_shadow" > $(INITRAMFS_BASE)shadow
+	touch $@
 
 stamp/inittab-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_inittab" > $(INITRAMFS_BASE)inittab
+	touch $@
 
 stamp/group-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_group" > $(INITRAMFS_BASE)group
+	touch $@
 
 stamp/resolv-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_resolv_conf" > $(INITRAMFS_BASE)resolv.conf
+	touch $@
 
 stamp/localtime-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_localtime" > $(INITRAMFS_BASE)localtime
-
-stamp/grub-cfg-file:
-	$(info $(notdir $@))
+	touch $@
 
 stamp/services-file:
 	$(info $(notdir $@))
 	printf "%s" "$$file_services" | base64 -d | xz -d > $(INITRAMFS_BASE)services
+	touch $@
 
 stamp/protocols-file:
 	$(info $(notdir $@))
 	printf "%s" "$$file_protocols" | base64 -d | xz -d > $(INITRAMFS_BASE)protocols
+	touch $@
 
 stamp/profile-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_profile" > $(INITRAMFS_BASE)profile
+	touch $@
 
 stamp/rcS-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_rcS" > $(INITRAMFS_BASE)rcS
+	touch $@
 
 stamp/ver:
 	$(info $(notdir $@))
