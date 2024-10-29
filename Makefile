@@ -458,6 +458,7 @@ LABEL linux
 MENU LABEL Linux
 KERNEL /boot/$(KERNEL_FILE)
 INITRD /boot/$(INITRAMFS_FILE)
+APPEND console=ttyS0 console=tty1
 endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
