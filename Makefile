@@ -44,7 +44,7 @@ GRUB_FILE=grub-$(GRUB_VER)
 GRUB_DIR=$(GRUB_FILE)/
 GRUB_TARBALL=$(GRUB_FILE).tar.xz
 GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
-GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label fat iso9660 cat echo ls test true help gzio multiboot2 efi_gop efi_uga
+GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
 
 LINUX_VER=6.11.5
 LINUX_FILE=linux-$(LINUX_VER)
@@ -476,7 +476,7 @@ stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX
 
 stamp/makedir:
 	$(info $(notdir $@))
-	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE){boot,boot/grub,boot/syslinux} $(ROOT_BASE){efi,efi/boot}
+	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE){boot,boot/grub,boot/grub/fonts,boot/syslinux} $(ROOT_BASE){efi,efi/boot}
 	touch $@
 
 stamp/fetch-kernel-$(LINUX_VER):
@@ -657,7 +657,7 @@ stamp/grub-mkimage: stamp/fetch-grub-$(GRUB_VER) stamp/compile-grub-$(GRUB_VER) 
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
 	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" $(GRUB_MODULES)
-	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkfont -o $(ROOT_BASE)boot/grub/unifont.pf2 $(DIST_BASE)unifont-16.0.01.bdf
+	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkfont -o $(ROOT_BASE)boot/grub/fonts/unifont.pf2 $(DIST_BASE)unifont-16.0.01.bdf
 	printf "%s\n" "$$file_grub_cfg" > $(ROOT_BASE)boot/grub/grub.cfg
 
 stamp/ln_syslinux_files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
@@ -782,3 +782,5 @@ check_tools:
 	$(info Please install these dependencies before running $(MAKEFILE_LIST) again.)
 	$(info $(MISSING_FILES))
 
+copy:
+	scp file.iso patrik@192.168.0.42:Hämtningar
