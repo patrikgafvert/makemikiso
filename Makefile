@@ -480,80 +480,80 @@ stamp/fetch-all: stamp/fetch-kernel-$(LINUX_VER) stamp/fetch-busybox-$(BUSYBOX_V
 
 stamp/fetch-kernel-$(LINUX_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(LINUX_KERNEL_URL)
-	cd src && tar -xf ../dist/$(LINUX_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(LINUX_KERNEL_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(LINUX_TARBALL)
 	touch $@
 
 stamp/fetch-busybox-$(BUSYBOX_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(BUSYBOX_URL)
-	cd src && tar -xf ../dist/$(BUSYBOX_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(BUSYBOX_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(BUSYBOX_TARBALL)
 	touch $@
 
 stamp/fetch-xorriso-$(XORRISO_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(XORRISO_URL)
-	cd src && tar -xf ../dist/$(XORRISO_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(XORRISO_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(XORRISO_TARBALL)
 	touch $@
 
 stamp/fetch-grub-$(GRUB_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(GRUB_URL)
-	cd src && tar -xf ../dist/$(GRUB_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(GRUB_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(GRUB_TARBALL)
 	touch $@
 
 stamp/fetch-freetype-$(FREETYPE_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(FREETYPE_URL)
-	cd src && tar -xf ../dist/$(FREETYPE_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(FREETYPE_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(FREETYPE_TARBALL)
 	touch $@
 
 stamp/fetch-unifont-$(UNIFONT_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(UNIFONT_URL)
-	cd src && gunzip ../dist/$(UNIFONT_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(UNIFONT_URL)
+	cd $(SRC_BASE) && gunzip $(DIST_BASE)$(UNIFONT_TARBALL)
 	touch $@
 
 stamp/fetch-syslinux-$(SYSLINUX_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(SYSLINUX_URL)
-	cd src && tar -xf ../dist/$(SYSLINUX_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(SYSLINUX_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(SYSLINUX_TARBALL)
 	touch $@
 
 stamp/fetch-mtools-$(MTOOLS_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(MTOOLS_URL)
-	cd src && tar -xf ../dist/$(MTOOLS_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(MTOOLS_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(MTOOLS_TARBALL)
 	touch $@
 
 stamp/fetch-dhtest-$(DHTEST_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(DHTEST_URL)
-	cd src && tar -xf ../dist/$(DHTEST_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(DHTEST_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DHTEST_TARBALL)
 	touch $@
 
 stamp/fetch-strace-$(STRACE_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(STRACE_URL)
-	cd src && tar -xf ../dist/$(STRACE_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(STRACE_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(STRACE_TARBALL)
 	touch $@
 
 stamp/fetch-dropbear-$(DROPBEAR_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(DROPBEAR_URL)
-	cd src && tar -xf ../dist/$(DROPBEAR_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(DROPBEAR_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DROPBEAR_TARBALL)
 	touch $@
 
 stamp/fetch-glibc-$(GLIBC_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(GLIBC_URL)
-	cd src && tar -xf ../dist/$(GLIBC_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(GLIBC_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(GLIBC_TARBALL)
 	touch $@
 
 stamp/fetch-dnsmasq-$(DNSMASQ_VER):
 	$(info $(notdir $@))
-	cd dist && $(DOWNLOADCMD) $(DNSMASQ_URL)
-	cd src && tar -xf ../dist/$(DNSMASQ_TARBALL)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(DNSMASQ_URL)
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DNSMASQ_TARBALL)
 	touch $@
 
 stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
@@ -594,7 +594,7 @@ stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(STRACE_DIR) && LDFLAGS='-static -pthread' ./configure
 	cd $(SRC_BASE)$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
-	cd $(SRC_BASE)$(STRACE_DIR)/src && strip ./strace
+	cd $(SRC_BASE)$(STRACE_DIR)src && strip ./strace
 
 stamp/compile-grub-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
 	$(info $(notdir $@))
