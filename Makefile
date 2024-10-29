@@ -643,7 +643,7 @@ stamp/get-netinstall-bootcode: stamp/compile-dhtest
 	sudo netinstall-cli -a 127.0.0.2 routeros-7.15.3.npk & echo $$! > netinstall.pid
 	$(foreach var,$(MIKROTIKDEVICE),sudo $(SRC_BASE)dhtest-master/dhtest -T 5 -o "$(var)" -i lo;curl -s tftp://127.0.0.1/linux.arm > netinstall_bootcode_$(var);)
 	sudo kill -9 $(shell cat netinstall.pid)
-	rm netinstall.pid
+	$(RM) netinstall.pid
 
 stamp/grub-mkimage:
 	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
