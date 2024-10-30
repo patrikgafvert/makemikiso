@@ -165,9 +165,15 @@ set prefix=($$root)/boot/grub
 endef
 
 define file_grub_cfg
-set timeout=1
+loadfont unifont
+terminal_output gfxterm
+set gfxmode=auto
+set gfxpayload=keep
+set menu_color_normal=red/blue
+set menu_color_highlight=green/blue
+set timeout=5
 menuentry "Linux Mikrotik Netinstall" {
-linux	/boot/$(KERNEL_FILE)
+linux	/boot/$(KERNEL_FILE) console=ttyS0
 initrd	/boot/$(INITRAMFS_FILE)
 }
 endef
@@ -383,6 +389,7 @@ CONFIG_KEYBOARD_ATKBD=y
 CONFIG_VGA_CONSOLE=y
 CONFIG_FB=y
 CONFIG_FB_VESA=y
+CONFIG_FB_EFI=y
 CONFIG_FRAMEBUFFER_CONSOLE=y
 CONFIG_FONTS=y
 CONFIG_FONT_TER16x32=y
@@ -784,3 +791,10 @@ check_tools:
 
 copy:
 	scp file.iso patrik@192.168.0.42:Hämtningar
+
+runtime:
+	$(MAKE) stamp/grub-mkimage
+	$(MAKE) stamp/mtools
+	$(MAKE) stamp/make-iso
+	$(MAKE) copy
+
