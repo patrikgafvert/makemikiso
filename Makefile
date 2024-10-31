@@ -173,7 +173,7 @@ set menu_color_normal=red/blue
 set menu_color_highlight=green/blue
 set timeout=5
 menuentry "Linux Mikrotik Netinstall" {
-linux	/boot/$(KERNEL_FILE) console=tty0 console=ttyS0
+linux	/boot/$(KERNEL_FILE) console=tty0 video=efifb:list
 initrd	/boot/$(INITRAMFS_FILE)
 }
 endef
@@ -382,11 +382,11 @@ CONFIG_SERIAL_8250=y
 CONFIG_SERIAL_8250_CONSOLE=y
 
 CONFIG_VT=y
+CONFIG_VT_CONSOLE=y
 CONFIG_TTY=y
 CONFIG_INPUT=y
 CONFIG_INPUT_KEYBOARD=y
 CONFIG_KEYBOARD_ATKBD=y
-CONFIG_VGA_CONSOLE=y
 CONFIG_FB=y
 CONFIG_FB_VESA=y
 CONFIG_FB_EFI=y
@@ -466,7 +466,7 @@ LABEL linux
 MENU LABEL Linux
 KERNEL /boot/$(KERNEL_FILE)
 INITRD /boot/$(INITRAMFS_FILE)
-APPEND console=tty0 console=ttyS0
+APPEND console=tty0
 endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
