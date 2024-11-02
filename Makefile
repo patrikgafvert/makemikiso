@@ -46,7 +46,7 @@ GRUB_TARBALL=$(GRUB_FILE).tar.xz
 GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
 GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
 
-LINUX_VER=6.11.5
+LINUX_VER=6.11.6
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
@@ -766,7 +766,7 @@ clean:
 
 run:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)boot/$(KERNEL_FILE) -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
+	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
 run-iso:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
