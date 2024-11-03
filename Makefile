@@ -570,7 +570,7 @@ stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) distclean
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) KCONFIG_ALLCONFIG=mytinyconfig allnoconfig
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) $(MAKEOPT)
-	[[ -f "$(ROOT_BASE)boot/$(KERNEL_FILE)" ]] || ln -s $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) $(ROOT_BASE)boot/$(KERNEL_FILE)
+	ln -sf $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) $(ROOT_BASE)boot/$(KERNEL_FILE)
 	touch $@
 
 stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
@@ -668,7 +668,7 @@ stamp/grub-mkimage: stamp/fetch-grub-$(GRUB_VER) stamp/compile-grub-$(GRUB_VER) 
 	printf "%s\n" "$$file_grub_cfg" > $(ROOT_BASE)boot/grub/grub.cfg
 
 stamp/ln_syslinux_files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
-	$(foreach file,$(SYSLINUX_FILES),[[ -f "$(ROOT_BASE)boot/syslinux/$(notdir $(file))" ]] || ln -s $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
+	$(foreach file,$(SYSLINUX_FILES),ln -sf $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
 	printf "%s\n" "$$file_syslinux_cfg" > $(ROOT_BASE)boot/syslinux/syslinux.cfg
 	touch $@
 
@@ -752,7 +752,7 @@ stamp/rcS-file:
 	touch $@
 
 stamp/make-iso:
-	[[ -f "$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs" ]] || ln -s $(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso $(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs
+	ln -sf $(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso $(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs
 	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs -output $(ISO_FILE) -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}/boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
 
 stamp/ver:
@@ -766,7 +766,7 @@ clean:
 
 run:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -kernel $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
+	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)boot/$(KERNEL_FILE) -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
 run-iso:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
