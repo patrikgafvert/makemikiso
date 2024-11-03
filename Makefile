@@ -169,11 +169,9 @@ loadfont unifont
 terminal_output gfxterm
 set gfxmode=auto
 set gfxpayload=keep
-set menu_color_normal=red/blue
-set menu_color_highlight=green/blue
 set timeout=5
 menuentry "Linux Mikrotik Netinstall" {
-linux	/boot/$(KERNEL_FILE) console=tty0 video=efifb:list
+linux	/boot/$(KERNEL_FILE) console=tty0
 initrd	/boot/$(INITRAMFS_FILE)
 }
 endef
@@ -463,7 +461,7 @@ PROMPT 1
 DEFAULT linux
 
 LABEL linux
-MENU LABEL Linux
+MENU LABEL Linux Mikrotik Netinstall
 KERNEL /boot/$(KERNEL_FILE)
 INITRD /boot/$(INITRAMFS_FILE)
 APPEND console=tty0
@@ -619,17 +617,20 @@ stamp/compile-grub-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
 stamp/compile-dhtest-$(DHTEST_VER): stamp/fetch-dhtest-$(DHTEST_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(DHTEST_DIR) && $(MAKE) $(MAKEOPT)
+	touch $@
 
 stamp/compile-dropbear-$(DROPBEAR_VER): stamp/fetch-dropbear-$(DROPBEAR_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(DROPBEAR_DIR) && ./configure --enable-static
 	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
 	$(foreach prog,$(DROPBEAR_PROGRAMS),strip $(SRC_BASE)$(DROPBEAR_DIR)/$(prog);cp $(SRC_BASE)$(DROPBEAR_DIR)/$(prog) $(INITRAMFS_BASE)bin;)
+	touch $@
 
 stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(DNSMASQ_DIR) && cp $(SRC_BASE)dnsmasq $(INITRAMFS_BASE)sbin
+	touch $@
 
 stamp/compile-mtools-$(MTOOLS_VER): stamp/fetch-mtools-$(MTOOLS_VER)
 	$(info $(notdir $@))
@@ -666,6 +667,7 @@ stamp/make-grub-mkimage: stamp/fetch-grub-$(GRUB_VER) stamp/compile-grub-$(GRUB_
 	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" $(GRUB_MODULES)
 	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkfont -o $(ROOT_BASE)boot/grub/fonts/unifont.pf2 $(DIST_BASE)unifont-16.0.01.bdf
 	printf "%s\n" "$$file_grub_cfg" > $(ROOT_BASE)boot/grub/grub.cfg
+	touch $@
 
 stamp/copy-syslinux-files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 	$(foreach file,$(SYSLINUX_FILES),ln -sf $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
@@ -675,6 +677,7 @@ stamp/copy-syslinux-files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 stamp/make-grub-efi-image: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools-$(MTOOLS_VER)
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mformat -i $(ROOT_BASE)boot/grub/efi.img -C -f 1440 -N 0 ::
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(ROOT_BASE)efi ::
+	touch $@
 
 stamp/init-file:
 	$(info $(notdir $@))
@@ -754,6 +757,7 @@ stamp/rcS-file:
 stamp/make-iso-file:
 	ln -sf $(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso $(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs
 	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs -output $(ISO_FILE) -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}/boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
+	touch $@
 
 stamp/ver:
 	$(info $(notdir $@))
