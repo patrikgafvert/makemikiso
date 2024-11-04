@@ -180,6 +180,7 @@ define file_inittab
 ::sysinit:/bin/hostname -F /etc/hostname
 ::sysinit:/etc/init.d/rcS
 ::respawn:-/bin/login -f root
+ttyS0::respawn:-/bin/login -f root
 ::ctrlaltdel:/sbin/reboot
 endef
 
@@ -774,7 +775,7 @@ run:
 
 run-iso:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -cdrom $(ISO_FILE) -enable-kvm -cpu max -nographic
+	qemu-system-x86_64 -m 2G -boot d -cdrom $(ISO_FILE) -enable-kvm -cpu max -nographic
 
 run-iso-efi:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
