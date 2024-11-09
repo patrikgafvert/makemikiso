@@ -664,9 +664,10 @@ stamp/make-initramfs:
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)boot/$(INITRAMFS_FILE)
 	touch $@
 
-stamp/get-netinstall-bootcode: stamp/compile-dhtest
+stamp/get-netinstall-bootcode: stamp/compile-dhtest-$(DHTEST_VER)
 	$(info $(notdir $@))
-	sudo netinstall-cli -a 127.0.0.2 routeros-7.15.3.npk & echo $$! > netinstall.pid
+	sudo $(INITRAMFS_BASE)netinstall-cli -i lo -a 127.0.0.2 $(INITRAMFS_BASE)routeros-$(MIKROTIKVER_STABLE).npk & echo $$! > netinstall.pid
+	sleep 2
 	$(foreach var,$(MIKROTIKDEVICE),sudo $(SRC_BASE)dhtest-master/dhtest -T 5 -o "$(var)" -i lo;curl -s tftp://127.0.0.1/linux.arm > netinstall_bootcode_$(var);)
 	sudo kill -9 $(shell cat netinstall.pid)
 	$(RM) netinstall.pid
