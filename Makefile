@@ -33,9 +33,12 @@ MIKROTIKDEVICE="Mips_boot" "MMipsBoot" "Powerboot" "e500_boot" "440__boot" "tile
 MIKROTIKARCH="-arm" "-arm64" "-mipsbe" "-mmips" "-smips" "-tile" "-ppc" ""
 MIKROTIKURL_ST=https://download.mikrotik.com/routeros/$(MIKROTIKVER_STABLE)/routeros-$(MIKROTIKVER_STABLE)$(device).npk
 MIKROTIKURL_TE=https://download.mikrotik.com/routeros/$(MIKROTIKVER_TESTING)/routeros-$(MIKROTIKVER_TESTING)$(device).npk
+MIKROTIKROUTEROS_ST=routeros-$(MIKROTIKVER_STABLE)$(device).npk
+MIKROTIKROUTEROS_TE=routeros-$(MIKROTIKVER_TESTING)$(device).npk
+
 MIKROTIK_NETINSTALL_VER=$(MIKROTIKVER_STABLE)
 MIKROTIK_NETINSTALL_FILE=netinstall-
-MIKROTIK_NETINSTALL_DIR=
+MIKROTIK_NETINSTALL_DIR=./
 MIKROTIK_NETINSTALL_TARBALL=$(MIKROTIK_NETINSTALL_FILE)$(MIKROTIKVER_STABLE).tar.gz
 MIKROTIK_NETINSTALL_URL=https://download.mikrotik.com/routeros/$(MIKROTIK_NETINSTALL_VER)/$(MIKROTIK_NETINSTALL_TARBALL)
 
@@ -46,7 +49,7 @@ GRUB_TARBALL=$(GRUB_FILE).tar.xz
 GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
 GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
 
-LINUX_VER=6.11.6
+LINUX_VER=6.11.7
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
@@ -563,6 +566,13 @@ stamp/fetch-dnsmasq-$(DNSMASQ_VER):
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DNSMASQ_TARBALL)
 	touch $@
 
+stamp/fetch-routeros:
+	$(info $(notdir $@))
+	cd $(INITRAMFS_BASE) && $(foreach device,$(MIKROTIKARCH),$(DOWNLOADCMD) $(MIKROTIKURL_ST);)
+	#cd $(INITRAMFS_BASE) && $(foreach device,$(MIKROTIKARCH),$(DOWNLOADCMD) $(MIKROTIKURL_TE);)
+	cd $(DIST_BASE) && $(DOWNLOADCMD) $(MIKROTIK_NETINSTALL_URL)
+	cd $(INITRAMFS_BASE) && tar -xf $(DIST_BASE)$(MIKROTIK_NETINSTALL_TARBALL)
+
 stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_kernelkconfig" > $(SRC_BASE)$(LINUX_DIR)mytinyconfig
@@ -646,14 +656,13 @@ stamp/make-initramfs:
 	$(foreach path,$(INITRAMFS_PATHS),echo "dir $(path) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	$(foreach file,$(INITRAMFS_FILES),echo "file $(file) $(INITRAMFS_BASE)$(notdir $(file)) 766 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
+	$(foreach device,$(MIKROTIKARCH),echo "file /root/$(MIKROTIKROUTEROS_ST) $(INITRAMFS_BASE)$(MIKROTIKROUTEROS_ST) 666 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
+	echo "file /root/netinstall-cli $(INITRAMFS_BASE)netinstall-cli 766 0 0" >> $(INITRAMFS_BASE)default_cpio_list
+	echo "file /root/LICENSE.txt $(INITRAMFS_BASE)LICENSE.txt 666 0 0" >> $(INITRAMFS_BASE)default_cpio_list
 	$(foreach file,$(shell $(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	cd $(SRC_BASE)$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)boot/$(INITRAMFS_FILE)
 	touch $@
-
-stamp/fetch-routeros:
-	$(foreach device,$(MIKROTIKARCH),echo $(DOWNLOADCMD) $(MIKROTIKURL_ST);)
-	$(foreach device,$(MIKROTIKARCH),echo $(DOWNLOADCMD) $(MIKROTIKURL_TE);)
 
 stamp/get-netinstall-bootcode: stamp/compile-dhtest
 	$(info $(notdir $@))
