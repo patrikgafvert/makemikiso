@@ -49,7 +49,7 @@ GRUB_TARBALL=$(GRUB_FILE).tar.xz
 GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
 GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
 
-LINUX_VER=6.11.7
+LINUX_VER=6.11.8
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
@@ -473,7 +473,7 @@ endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
 
-all: stamp/makedir stamp/compile stamp/compile-strace-$(STRACE_VER) stamp/filecopy stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/make-grub-efi-image stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-iso-file
+all: stamp/makedir stamp/compile stamp/compile-strace-$(STRACE_VER) stamp/filecopy stamp/fetch-routeros stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/make-grub-efi-image stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-iso-file
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file stamp/localtime-file
 	$(info $(notdir $@))
