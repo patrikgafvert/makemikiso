@@ -788,7 +788,7 @@ run-iso:
 
 run-iso-efi:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -cdrom $(ISO_FILE) -bios /usr/share/OVMF/OVMF_CODE.fd -enable-kvm -cpu max -nographic
+	qemu-system-x86_64 -m 2G -boot d -cdrom $(ISO_FILE) -enable-kvm -cpu max -nographic -bios /usr/share/OVMF/OVMF_CODE.fd
 
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
