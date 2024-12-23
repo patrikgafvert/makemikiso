@@ -812,3 +812,4 @@ runtime:
 	$(MAKE) stamp/make-iso-file
 	$(MAKE) copy
 
+.PHONY: all test clean passwd group shadow hosts networks protocols services ethers rpc root guest nobody root SHELL
