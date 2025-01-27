@@ -49,7 +49,7 @@ GRUB_TARBALL=$(GRUB_FILE).tar.xz
 GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
 GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
 
-LINUX_VER=6.12.10
+LINUX_VER=6.12.11
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
@@ -86,13 +86,13 @@ GLIBC_DIR=$(GLIBC_FILE)/
 GLIBC_TARBALL=$(GLIBC_FILE).tar.xz
 GLIBC_URL=https://ftp.gnu.org/gnu/glibc/$(GLIBC_TARBALL)
 
-MTOOLS_VER=4.0.44
+MTOOLS_VER=4.0.47
 MTOOLS_FILE=mtools-$(MTOOLS_VER)
 MTOOLS_DIR=$(MTOOLS_FILE)/
 MTOOLS_TARBALL=$(MTOOLS_FILE).tar.gz
 MTOOLS_URL=http://ftp.gnu.org/gnu/mtools/$(MTOOLS_TARBALL)
 
-UNIFONT_VER=16.0.01
+UNIFONT_VER=16.0.02
 UNIFONT_FILE=unifont-$(UNIFONT_VER).bdf
 UNIFONT_DIR=$(UNIFONT_FILE)/
 UNIFONT_TARBALL=$(UNIFONT_FILE).gz
@@ -110,7 +110,7 @@ DHTEST_TARBALL=$(DHTEST_FILE).tar.gz
 DHTEST_DIR=dhtest-master/
 DHTEST_URL=https://github.com/saravana815/dhtest/archive/$(DHTEST_TARBALL)
 
-STRACE_VER=6.12
+STRACE_VER=6.13
 STRACE_FILE=strace-$(STRACE_VER)
 STRACE_TARBALL=$(STRACE_FILE).tar.xz
 STRACE_DIR=$(STRACE_FILE)/
