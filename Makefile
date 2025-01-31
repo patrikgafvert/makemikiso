@@ -11,6 +11,7 @@ DIST_BASE=$(ROOT_DIR)dist/
 STAMP_BASE=$(ROOT_DIR)stamp/
 INITRAMFS_BASE=$(OUT_BASE)initramfs/
 ROOT_BASE=$(OUT_BASE)root/
+KERNEL_ARGSV=console=ttyS0
 
 HOSTNAME=netinstall
 IPADDR=10.0.2.15
@@ -174,7 +175,7 @@ set gfxmode=auto
 set gfxpayload=keep
 set timeout=5
 menuentry "Linux Mikrotik Netinstall" {
-linux	/boot/$(KERNEL_FILE) console=tty0
+linux	/boot/$(KERNEL_FILE) $(KERNEL_ARGSV)
 initrd	/boot/$(INITRAMFS_FILE)
 }
 endef
@@ -468,7 +469,7 @@ LABEL linux
 MENU LABEL Linux Mikrotik Netinstall
 KERNEL /boot/$(KERNEL_FILE)
 INITRD /boot/$(INITRAMFS_FILE)
-APPEND console=tty0
+APPEND $(KERNEL_ARGSV)
 endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
@@ -780,7 +781,7 @@ clean:
 
 run:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)boot/$(KERNEL_FILE) -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -append "console=ttyS0" -enable-kvm -cpu host -nic user,model=e1000e -nographic
+	qemu-system-x86_64 -m 2G -kernel $(ROOT_BASE)boot/$(KERNEL_FILE) -initrd $(ROOT_BASE)boot/$(INITRAMFS_FILE) -append "$(KERNEL_ARGSV)" -enable-kvm -cpu host -nic user,model=e1000e -nographic
 
 run-iso:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
