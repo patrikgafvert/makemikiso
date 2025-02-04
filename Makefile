@@ -11,7 +11,7 @@ DIST_BASE=$(ROOT_DIR)dist/
 STAMP_BASE=$(ROOT_DIR)stamp/
 INITRAMFS_BASE=$(OUT_BASE)initramfs/
 ROOT_BASE=$(OUT_BASE)root/
-KERNEL_ARGSV=console=tty0
+KERNEL_ARGSV=console=tty0 console=ttyS0
 
 HOSTNAME=netinstall
 IPADDR=10.0.2.15
