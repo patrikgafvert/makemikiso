@@ -1,4 +1,4 @@
-.SILENT:
+#.SILENT:
 SHELL:=$(shell which bash)
 ARCH=x86_64
 ISO_FILE=file.iso
@@ -493,79 +493,79 @@ stamp/makedir:
 
 stamp/fetch-kernel-$(LINUX_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(LINUX_KERNEL_URL)
+	if [[ ! -f "$(DIST_BASE)$(LINUX_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(LINUX_KERNEL_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(LINUX_TARBALL)
 	touch $@
 
 stamp/fetch-busybox-$(BUSYBOX_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(BUSYBOX_URL)
+	if [[ ! -f "$(DIST_BASE)$(BUSYBOX_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(BUSYBOX_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(BUSYBOX_TARBALL)
 	touch $@
 
 stamp/fetch-xorriso-$(XORRISO_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(XORRISO_URL)
+	if [[ ! -f "$(DIST_BASE)$(XORRISO_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(XORRISO_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(XORRISO_TARBALL)
 	touch $@
 
 stamp/fetch-grub-$(GRUB_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(GRUB_URL)
+	if [[ ! -f "$(DIST_BASE)$(GRUB_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(GRUB_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(GRUB_TARBALL)
 	touch $@
 
 stamp/fetch-freetype-$(FREETYPE_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(FREETYPE_URL)
+	if [[ ! -f "$(DIST_BASE)$(FREETYPE_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(FREETYPE_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(FREETYPE_TARBALL)
 	touch $@
 
 stamp/fetch-unifont-$(UNIFONT_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(UNIFONT_URL)
+	if [[ ! -f "$(DIST_BASE)$(UNIFONT_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(UNIFONT_URL); fi
 	cd $(SRC_BASE) && gunzip $(DIST_BASE)$(UNIFONT_TARBALL)
 	touch $@
 
 stamp/fetch-syslinux-$(SYSLINUX_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(SYSLINUX_URL)
+	if [[ ! -f "$(DIST_BASE)$(SYSLINUX_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(SYSLINUX_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(SYSLINUX_TARBALL)
 	touch $@
 
 stamp/fetch-mtools-$(MTOOLS_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(MTOOLS_URL)
+	if [[ ! -f "$(DIST_BASE)$(MTOOLS_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(MTOOLS_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(MTOOLS_TARBALL)
 	touch $@
 
 stamp/fetch-dhtest-$(DHTEST_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(DHTEST_URL)
+	if [[ ! -f "$(DIST_BASE)$(DHTEST_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DHTEST_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DHTEST_TARBALL)
 	touch $@
 
 stamp/fetch-strace-$(STRACE_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(STRACE_URL)
+	if [[ ! -f "$(DIST_BASE)$(STRACE_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(STRACE_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(STRACE_TARBALL)
 	touch $@
 
 stamp/fetch-dropbear-$(DROPBEAR_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(DROPBEAR_URL)
+	if [[ ! -f "$(DIST_BASE)$(DROPBEAR_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DROPBEAR_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DROPBEAR_TARBALL)
 	touch $@
 
 stamp/fetch-glibc-$(GLIBC_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(GLIBC_URL)
+	if [[ ! -f "$(DIST_BASE)$(GLIBC_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(GLIBC_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(GLIBC_TARBALL)
 	touch $@
 
 stamp/fetch-dnsmasq-$(DNSMASQ_VER):
 	$(info $(notdir $@))
-	cd $(DIST_BASE) && $(DOWNLOADCMD) $(DNSMASQ_URL)
+	if [[ ! -f "$(DIST_BASE)$(DNSMASQ_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DNSMASQ_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DNSMASQ_TARBALL)
 	touch $@
 
