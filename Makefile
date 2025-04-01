@@ -779,6 +779,10 @@ stamp/ver:
 
 clean:
 	$(info $(notdir $@))
+	$(RM) -r $(SRC_BASE) $(STAMP_BASE) $(OUT_BASE) $(ISO_FILE)
+
+distclean:
+	$(info $(notdir $@))
 	$(RM) -r $(SRC_BASE) $(DIST_BASE) $(STAMP_BASE) $(OUT_BASE) $(ISO_FILE)
 
 run:
