@@ -29,13 +29,11 @@ MAKEOPT=-j$(shell nproc)
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
 
 MIKROTIKVER_STABLE=$(shell curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -f1 -d' ')
-MIKROTIKVER_TESTING=$(shell curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.testing | cut -f1 -d' ')
 MIKROTIKDEVICE="Mips_boot" "MMipsBoot" "Powerboot" "e500_boot" "440__boot" "tile_boot" "ARM__boot" "ARM64__boot"
 MIKROTIKARCH="-arm" "-arm64" "-mipsbe" "-mmips" "-smips" "-tile" "-ppc" ""
 MIKROTIKURL_ST=https://download.mikrotik.com/routeros/$(MIKROTIKVER_STABLE)/routeros-$(MIKROTIKVER_STABLE)$(device).npk
 MIKROTIKURL_TE=https://download.mikrotik.com/routeros/$(MIKROTIKVER_TESTING)/routeros-$(MIKROTIKVER_TESTING)$(device).npk
 MIKROTIKROUTEROS_ST=routeros-$(MIKROTIKVER_STABLE)$(device).npk
-MIKROTIKROUTEROS_TE=routeros-$(MIKROTIKVER_TESTING)$(device).npk
 
 MIKROTIK_NETINSTALL_VER=$(MIKROTIKVER_STABLE)
 MIKROTIK_NETINSTALL_FILE=netinstall-
@@ -571,8 +569,7 @@ stamp/fetch-dnsmasq-$(DNSMASQ_VER):
 
 stamp/fetch-routeros:
 	$(info $(notdir $@))
-	cd $(INITRAMFS_BASE) && $(foreach device,$(MIKROTIKARCH),$(DOWNLOADCMD) $(MIKROTIKURL_ST);)
-	#cd $(INITRAMFS_BASE) && $(foreach device,$(MIKROTIKARCH),$(DOWNLOADCMD) $(MIKROTIKURL_TE);)
+	cd $(DIST_BASE) && $(foreach device,$(MIKROTIKARCH),$(DOWNLOADCMD) $(MIKROTIKURL_ST);)
 	cd $(DIST_BASE) && $(DOWNLOADCMD) $(MIKROTIK_NETINSTALL_URL)
 	cd $(INITRAMFS_BASE) && tar -xf $(DIST_BASE)$(MIKROTIK_NETINSTALL_TARBALL)
 
@@ -658,7 +655,7 @@ stamp/make-initramfs:
 	$(foreach path,$(INITRAMFS_PATHS),echo "dir $(path) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	$(foreach file,$(INITRAMFS_FILES),echo "file $(file) $(INITRAMFS_BASE)$(notdir $(file)) 766 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
-	$(foreach device,$(MIKROTIKARCH),echo "file /root/$(MIKROTIKROUTEROS_ST) $(INITRAMFS_BASE)$(MIKROTIKROUTEROS_ST) 666 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
+	$(foreach device,$(MIKROTIKARCH),echo "file /root/$(MIKROTIKROUTEROS_ST) $(DIST_BASE)$(MIKROTIKROUTEROS_ST) 666 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
 	echo "file /root/netinstall-cli $(INITRAMFS_BASE)netinstall-cli 766 0 0" >> $(INITRAMFS_BASE)default_cpio_list
 	echo "file /root/LICENSE.txt $(INITRAMFS_BASE)LICENSE.txt 666 0 0" >> $(INITRAMFS_BASE)default_cpio_list
 	$(foreach file,$(shell $(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
