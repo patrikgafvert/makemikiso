@@ -85,7 +85,7 @@ GLIBC_DIR=$(GLIBC_FILE)/
 GLIBC_TARBALL=$(GLIBC_FILE).tar.xz
 GLIBC_URL=https://ftp.gnu.org/gnu/glibc/$(GLIBC_TARBALL)
 
-MTOOLS_VER=4.0.47
+MTOOLS_VER=4.0.48
 MTOOLS_FILE=mtools-$(MTOOLS_VER)
 MTOOLS_DIR=$(MTOOLS_FILE)/
 MTOOLS_TARBALL=$(MTOOLS_FILE).tar.gz
@@ -766,7 +766,7 @@ stamp/rcS-file:
 
 stamp/make-iso-file:
 	ln -sf $(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso $(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs
-	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs -output $(ISO_FILE) -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog ${ROOT_BASE}boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
+	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs -output $(ISO_FILE) -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}/boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
 	touch $@
 
 stamp/ver:
@@ -792,7 +792,7 @@ run-iso:
 
 run-iso-efi:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -boot order=d -m 2G -device ide-cd,drive=drive-cd-disk1,id=cd-disk1,unit=0,bus=ide.0,bootindex=1 -drive file=$(ISO_FILE),id=drive-cd-disk1,if=none,media=cdrom,index=1 -enable-kvm -cpu max -nographic -bios /usr/share/OVMF/OVMF_CODE.fd
+	qemu-system-x86_64 -m 2G -boot d -cdrom $(ISO_FILE) -enable-kvm -cpu max -nographic -bios /usr/share/OVMF/OVMF_CODE.fd
 
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
