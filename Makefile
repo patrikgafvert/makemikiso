@@ -766,7 +766,7 @@ stamp/rcS-file:
 
 stamp/make-iso-file:
 	ln -sf $(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso $(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs
-	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs -output $(ISO_FILE) -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}boot/syslinux/isohdpfx.bin -eltorito-boot ${ROOT_BASE}boot/syslinux/isolinux.bin -eltorito-catalog ${ROOT_BASE}boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
+	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorrisofs -output $(ISO_FILE) -full-iso9660-filenames -joliet -rational-rock -sysid LINUX -volid "NETINSTALL" -follow-links -isohybrid-mbr boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog ${ROOT_BASE}boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
 	touch $@
 
 stamp/ver:
