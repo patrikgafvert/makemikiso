@@ -686,7 +686,7 @@ stamp/copy-syslinux-files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 
 stamp/make-grub-efi-image: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools-$(MTOOLS_VER)
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mformat -i $(ROOT_BASE)boot/grub/efi.img -C -f 1440 -N 0 ::
-	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(ROOT_BASE)efi ::
+	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(ROOT_BASE)EFI ::
 	touch $@
 
 stamp/init-file:
