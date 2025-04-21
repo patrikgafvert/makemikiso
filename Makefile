@@ -486,7 +486,7 @@ stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX
 
 stamp/makedir:
 	$(info $(notdir $@))
-	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE){boot,boot/grub,boot/grub/fonts,boot/syslinux} $(ROOT_BASE){efi,efi/boot}
+	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE){boot,boot/grub,boot/grub/fonts,boot/syslinux} $(ROOT_BASE){EFI,EFI/BOOT}
 	touch $@
 
 stamp/fetch-kernel-$(LINUX_VER):
@@ -674,7 +674,7 @@ stamp/get-netinstall-bootcode: stamp/compile-dhtest-$(DHTEST_VER)
 stamp/make-grub-mkimage: stamp/fetch-grub-$(GRUB_VER) stamp/compile-grub-$(GRUB_VER) stamp/fetch-unifont-$(UNIFONT_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
-	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)efi/boot/bootx64.efi" --format="x86_64-efi" --compression="xz" --directory="./grub-core" $(GRUB_MODULES)
+	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)EFI/BOOT/BOOTX64.EFI" --format="x86_64-efi" --compression="xz" --directory="./grub-core" $(GRUB_MODULES)
 	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkfont -o $(ROOT_BASE)boot/grub/fonts/unifont.pf2 $(DIST_BASE)unifont-16.0.02.bdf
 	printf "%s\n" "$$file_grub_cfg" > $(ROOT_BASE)boot/grub/grub.cfg
 	touch $@
@@ -686,7 +686,7 @@ stamp/copy-syslinux-files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 
 stamp/make-grub-efi-image: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools-$(MTOOLS_VER)
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mformat -i $(ROOT_BASE)boot/grub/efi.img -C -f 1440 -N 0 ::
-	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(ROOT_BASE)efi ::
+	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(ROOT_BASE)EFI ::
 	touch -md "@$$(date +%s)" ${ROOT_BASE}boot/grub/efi.img
 	touch $@
 
