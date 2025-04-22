@@ -31,9 +31,8 @@ DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
 MIKROTIKVER_STABLE=$(shell curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -f1 -d' ')
 MIKROTIKDEVICE="Mips_boot" "MMipsBoot" "Powerboot" "e500_boot" "440__boot" "tile_boot" "ARM__boot" "ARM64__boot"
 MIKROTIKARCH="-arm" "-arm64" "-mipsbe" "-mmips" "-smips" "-tile" "-ppc" ""
-MIKROTIKURL_ST=https://download.mikrotik.com/routeros/$(MIKROTIKVER_STABLE)/routeros-$(MIKROTIKVER_STABLE)$(device).npk
-MIKROTIKURL_TE=https://download.mikrotik.com/routeros/$(MIKROTIKVER_TESTING)/routeros-$(MIKROTIKVER_TESTING)$(device).npk
-MIKROTIKROUTEROS_ST=routeros-$(MIKROTIKVER_STABLE)$(device).npk
+MIKROTIKURL_ST=$(subst ",,"https://download.mikrotik.com/routeros/$(MIKROTIKVER_STABLE)/routeros-$(MIKROTIKVER_STABLE)$(device).npk")
+MIKROTIKROUTEROS_ST=$(subst ",,"routeros-$(MIKROTIKVER_STABLE)$(device).npk")
 
 MIKROTIK_NETINSTALL_VER=$(MIKROTIKVER_STABLE)
 MIKROTIK_NETINSTALL_FILE=netinstall-
@@ -491,79 +490,79 @@ stamp/makedir:
 
 stamp/fetch-kernel-$(LINUX_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(LINUX_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(LINUX_KERNEL_URL); fi
+	if [ ! -f "$(DIST_BASE)$(LINUX_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(LINUX_KERNEL_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(LINUX_TARBALL)
 	touch $@
 
 stamp/fetch-busybox-$(BUSYBOX_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(BUSYBOX_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(BUSYBOX_URL); fi
+	if [ ! -f "$(DIST_BASE)$(BUSYBOX_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(BUSYBOX_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(BUSYBOX_TARBALL)
 	touch $@
 
 stamp/fetch-xorriso-$(XORRISO_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(XORRISO_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(XORRISO_URL); fi
+	if [ ! -f "$(DIST_BASE)$(XORRISO_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(XORRISO_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(XORRISO_TARBALL)
 	touch $@
 
 stamp/fetch-grub-$(GRUB_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(GRUB_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(GRUB_URL); fi
+	if [ ! -f "$(DIST_BASE)$(GRUB_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(GRUB_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(GRUB_TARBALL)
 	touch $@
 
 stamp/fetch-freetype-$(FREETYPE_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(FREETYPE_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(FREETYPE_URL); fi
+	if [ ! -f "$(DIST_BASE)$(FREETYPE_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(FREETYPE_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(FREETYPE_TARBALL)
 	touch $@
 
 stamp/fetch-unifont-$(UNIFONT_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(UNIFONT_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(UNIFONT_URL); fi
+	if [ ! -f "$(DIST_BASE)$(UNIFONT_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(UNIFONT_URL); fi
 	cd $(SRC_BASE) && gunzip $(DIST_BASE)$(UNIFONT_TARBALL)
 	touch $@
 
 stamp/fetch-syslinux-$(SYSLINUX_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(SYSLINUX_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(SYSLINUX_URL); fi
+	if [ ! -f "$(DIST_BASE)$(SYSLINUX_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(SYSLINUX_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(SYSLINUX_TARBALL)
 	touch $@
 
 stamp/fetch-mtools-$(MTOOLS_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(MTOOLS_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(MTOOLS_URL); fi
+	if [ ! -f "$(DIST_BASE)$(MTOOLS_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(MTOOLS_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(MTOOLS_TARBALL)
 	touch $@
 
 stamp/fetch-dhtest-$(DHTEST_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(DHTEST_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DHTEST_URL); fi
+	if [ ! -f "$(DIST_BASE)$(DHTEST_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DHTEST_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DHTEST_TARBALL)
 	touch $@
 
 stamp/fetch-strace-$(STRACE_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(STRACE_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(STRACE_URL); fi
+	if [ ! -f "$(DIST_BASE)$(STRACE_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(STRACE_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(STRACE_TARBALL)
 	touch $@
 
 stamp/fetch-dropbear-$(DROPBEAR_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(DROPBEAR_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DROPBEAR_URL); fi
+	if [ ! -f "$(DIST_BASE)$(DROPBEAR_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DROPBEAR_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DROPBEAR_TARBALL)
 	touch $@
 
 stamp/fetch-glibc-$(GLIBC_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(GLIBC_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(GLIBC_URL); fi
+	if [ ! -f "$(DIST_BASE)$(GLIBC_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(GLIBC_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(GLIBC_TARBALL)
 	touch $@
 
 stamp/fetch-dnsmasq-$(DNSMASQ_VER):
 	$(info $(notdir $@))
-	if [[ ! -f "$(DIST_BASE)$(DNSMASQ_TARBALL)" ]]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DNSMASQ_URL); fi
+	if [ ! -f "$(DIST_BASE)$(DNSMASQ_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DNSMASQ_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DNSMASQ_TARBALL)
 	touch $@
 
@@ -687,7 +686,6 @@ stamp/copy-syslinux-files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
 stamp/make-grub-efi-image: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools-$(MTOOLS_VER)
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mformat -i $(ROOT_BASE)boot/grub/efi.img -C -f 1440 -N 0 ::
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(ROOT_BASE)EFI ::
-	touch -md "@$$(date +%s)" ${ROOT_BASE}boot/grub/efi.img
 	touch $@
 
 stamp/init-file:
