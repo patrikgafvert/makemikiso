@@ -47,7 +47,7 @@ GRUB_TARBALL=$(GRUB_FILE).tar.xz
 GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
 GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
 
-LINUX_VER=6.14.7
+LINUX_VER=6.15
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
@@ -108,7 +108,7 @@ DHTEST_TARBALL=$(DHTEST_FILE).tar.gz
 DHTEST_DIR=dhtest-master/
 DHTEST_URL=https://github.com/saravana815/dhtest/archive/$(DHTEST_TARBALL)
 
-STRACE_VER=6.14
+STRACE_VER=6.15
 STRACE_FILE=strace-$(STRACE_VER)
 STRACE_TARBALL=$(STRACE_FILE).tar.xz
 STRACE_DIR=$(STRACE_FILE)/
