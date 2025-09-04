@@ -53,12 +53,6 @@ LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
 LINUX_KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v6.x/$(LINUX_TARBALL)
 
-#LINUX_VER=6.16.5
-#LINUX_FILE=linux-$(LINUX_VER)
-#LINUX_DIR=$(LINUX_FILE)/
-#LINUX_TARBALL=$(LINUX_FILE).tar.xz
-#LINUX_KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v6.x/$(LINUX_TARBALL)
-
 BUSYBOX_VER=1.37.0
 BUSYBOX_FILE=busybox-$(BUSYBOX_VER)
 BUSYBOX_DIR=$(BUSYBOX_FILE)/
