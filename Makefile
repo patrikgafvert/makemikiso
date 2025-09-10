@@ -47,7 +47,7 @@ GRUB_TARBALL=$(GRUB_FILE).tar.xz
 GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
 GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
 
-LINUX_VER=$(shell curl -s https://www.kernel.org/releases.json | jq -r '.releases[1].version')
+LINUX_VER=$(shell curl -s https://www.kernel.org/releases.json | jq -r '.releases[] | select (.moniker == "stable" and .iseol == false) | .version')
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
