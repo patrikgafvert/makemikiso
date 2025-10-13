@@ -44,7 +44,7 @@ GRUB_VER=2.12
 GRUB_FILE=grub-$(GRUB_VER)
 GRUB_DIR=$(GRUB_FILE)/
 GRUB_TARBALL=$(GRUB_FILE).tar.xz
-GRUB_URL=https://ftp.gnu.org/gnu/grub/$(GRUB_TARBALL)
+GRUB_URL=https://mirror.bahnhof.net/pub/gnu/grub/$(GRUB_TARBALL)
 GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
 
 LINUX_VER=$(shell curl -s https://www.kernel.org/releases.json | jq -r '.releases[] | select (.moniker == "stable" and .iseol == false) | .version')
@@ -63,7 +63,7 @@ XORRISO_VER=1.5.6
 XORRISO_FILE=xorriso-$(XORRISO_VER)
 XORRISO_DIR=$(XORRISO_FILE)/
 XORRISO_TARBALL=$(XORRISO_FILE).pl02.tar.gz
-XORRISO_URL=https://www.gnu.org/software/xorriso/$(XORRISO_TARBALL)
+XORRISO_URL=https://mirror.bahnhof.net/pub/gnu/xorriso/$(XORRISO_TARBALL)
 
 SYSLINUX_VER=6.04-pre1
 SYSLINUX_FILE=syslinux-$(SYSLINUX_VER)
@@ -82,19 +82,19 @@ GLIBC_VER=2.40
 GLIBC_FILE=glibc-$(GLIBC_VER)
 GLIBC_DIR=$(GLIBC_FILE)/
 GLIBC_TARBALL=$(GLIBC_FILE).tar.xz
-GLIBC_URL=https://ftp.gnu.org/gnu/glibc/$(GLIBC_TARBALL)
+GLIBC_URL=https://mirror.bahnhof.net/pub/gnu/glibc/$(GLIBC_TARBALL)
 
 MTOOLS_VER=4.0.49
 MTOOLS_FILE=mtools-$(MTOOLS_VER)
 MTOOLS_DIR=$(MTOOLS_FILE)/
 MTOOLS_TARBALL=$(MTOOLS_FILE).tar.gz
-MTOOLS_URL=http://ftp.gnu.org/gnu/mtools/$(MTOOLS_TARBALL)
+MTOOLS_URL=https://mirror.bahnhof.net/pub/gnu/mtools/$(MTOOLS_TARBALL)
 
 UNIFONT_VER=16.0.04
 UNIFONT_FILE=unifont-$(UNIFONT_VER).bdf
 UNIFONT_DIR=$(UNIFONT_FILE)/
 UNIFONT_TARBALL=$(UNIFONT_FILE).gz
-UNIFONT_URL=https://ftp.gnu.org/gnu/unifont/unifont-$(UNIFONT_VER)/$(UNIFONT_TARBALL)
+UNIFONT_URL=https://mirror.bahnhof.net/pub/gnu/unifont/unifont-$(UNIFONT_VER)/$(UNIFONT_TARBALL)
 
 FREETYPE_VER=2.13.3
 FREETYPE_FILE=freetype-$(FREETYPE_VER)
