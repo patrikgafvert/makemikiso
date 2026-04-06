@@ -612,7 +612,7 @@ stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER)
 
 stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(STRACE_DIR) && LDFLAGS='-static -pthread' CFLAGS='-s' ./configure --enable-mpers=no
+	cd $(SRC_BASE)$(STRACE_DIR) && LDFLAGS='-static -pthread' CFLAGS='-s' ./configure
 	cd $(SRC_BASE)$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
 	touch $@
 
