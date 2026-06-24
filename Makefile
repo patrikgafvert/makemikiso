@@ -108,7 +108,7 @@ DHTEST_TARBALL=$(DHTEST_FILE).tar.gz
 DHTEST_DIR=dhtest-master/
 DHTEST_URL=https://github.com/saravana815/dhtest/archive/$(DHTEST_TARBALL)
 
-STRACE_VER=7.0
+STRACE_VER=7.1
 STRACE_FILE=strace-$(STRACE_VER)
 STRACE_TARBALL=$(STRACE_FILE).tar.xz
 STRACE_DIR=$(STRACE_FILE)/
@@ -790,7 +790,7 @@ run-iso:
 
 run-iso-efi:
 	$(info "Run qemu <CTRL><a> <x> to exit. ")
-	qemu-system-x86_64 -m 2G -boot d -cdrom $(ISO_FILE) -enable-kvm -cpu max -nographic -bios /usr/share/OVMF/OVMF_CODE.fd
+	qemu-system-x86_64 -m 2G -boot d -cdrom $(ISO_FILE) -enable-kvm -cpu max -nographic -pflash /usr/share/OVMF/OVMF_CODE_4M.fd
 
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
