@@ -2,7 +2,7 @@
 SHELL:=$(shell which bash)
 ARCH=x86_64
 ISO_FILE=file.iso
-REQUIRED_PROGRAMS = pelle gcc make python3 kalle
+REQUIRED_PROGRAMS=gcc make python3 curl jq bison gawk gperf xz
 MISSING_FILES=$(foreach prog,$(REQUIRED_PROGRAMS),$(shell command -v $(prog) > /dev/null 2>&1 || echo -n >&2 "$(prog) "))
 ROOT_DIR=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 OUT_BASE=$(ROOT_DIR)out/
@@ -21,16 +21,42 @@ SECDNS=8.8.4.4
 
 KERNEL_FILE=bzImage
 INITRAMFS_FILE=initramfs.cpio.xz
-INITRAMFS_PATHS=/bin /dev /etc /etc/init.d /lib /lib64 /mnt /mnt/root /proc /sbin /sys /home /usr /usr/bin /usr/sbin /usr/lib64 /var
+INITRAMFS_PATHS=/bin /dev /etc /etc/init.d /lib /mnt /mnt/root /proc /sbin /sys /home /usr /usr/bin /usr/sbin /usr/lib64 /var
 INITRAMFS_FILES=/init /etc/inittab /etc/init.d/rcS /etc/passwd /etc/shadow /etc/group /etc/issue /etc/hosts /etc/hostname /etc/services /etc/protocols /etc/profile /etc/resolv.conf /etc/nsswitch.conf /etc/localtime
 
 DOWNLOADCMD=curl -s -O -L -k
 MAKEOPT=-j$(shell nproc)
 DROPBEAR_PROGRAMS=dropbear dbclient dropbearkey dropbearconvert scp
 
-MIKROTIKVER_STABLE=$(shell curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -f1 -d' ')
 MIKROTIKDEVICE="Mips_boot" "MMipsBoot" "Powerboot" "e500_boot" "440__boot" "tile_boot" "ARM__boot" "ARM64__boot"
 MIKROTIKARCH="-arm" "-arm64" "-mipsbe" "-mmips" "-smips" "-tile" "-ppc" ""
+
+VERSIONS_FILE=versions.mk
+
+-include $(VERSIONS_FILE)
+
+$(VERSIONS_FILE):
+	@echo "Hämtar senaste versionerna över nätverket..."
+	@echo "# Automatiskt genererade versioner - ta bort filen för att uppdatera" > $@
+	@echo "MIKROTIKVER_STABLE := $$(curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -f1 -d' ')" >> $@
+	@echo "GRUB_VER := $$(curl -s https://ftp.gnu.org/gnu/grub/ | grep -oE 'grub-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.xz' | sed 's/grub-//' | sed 's/\.tar\.xz//' | sort -V | tail -1)" >> $@
+	@echo "LINUX_VER := $$(curl -s https://www.kernel.org/releases.json | jq -r '.latest_stable.version')" >> $@
+	@echo "SYSLINUX_DIR_NAME := $$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/ | grep -oE '[0-9]+\.[0-9]+' | sort -V | tail -1)" >> $@
+	@echo "SYSLINUX_VER := $$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/$$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/ | grep -oE '[0-9]+\.[0-9]+' | sort -V | tail -1)/ | grep -oE 'syslinux-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.(gz|bz2|xz)' | sort -V | tail -1 | sed -E 's/syslinux-(.*)\.tar\.(gz|bz2|xz)/\1/')" >> $@
+	@echo "SYSLINUX_EXT := $$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/$$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/ | grep -oE '[0-9]+\.[0-9]+' | sort -V | tail -1)/ | grep -oE 'syslinux-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.(gz|bz2|xz)' | sort -V | tail -1 | sed -E 's/.*\.tar\.(gz|bz2|xz)/\1/')" >> $@
+	@echo "BUSYBOX_VER := $$(curl -s https://busybox.net/downloads/ | grep -oE 'busybox-[0-9]+\.[0-9]+\.[0-9]+\.tar\.bz2' | sed 's/busybox-//' | sed 's/\.tar\.bz2//' | sort -V | tail -1)" >> $@
+	@echo "XORRISO_VER := $$(curl -s https://ftp.gnu.org/gnu/xorriso/ | grep -oE 'xorriso-[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' | sed -E 's/xorriso-(.*)\.tar\.gz/\1/' | sort -Vu | tail -1)" >> $@
+	@echo "GLIBC_VER := $$(curl -s https://ftp.gnu.org/gnu/glibc/ | grep -oE 'glibc-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.xz' | sed -E 's/glibc-(.*)\.tar\.xz/\1/' | sort -V | tail -1)" >> $@
+	@echo "MTOOLS_VER := $$(curl -s https://ftp.gnu.org/gnu/mtools/ | grep -oE 'mtools-[0-9]+\.[0-9]+\.[0-9]+\.tar\.bz2' | sed -E 's/mtools-(.*)\.tar\.bz2/\1/' | sort -Vu | tail -1)" >> $@
+	@echo "UNIFONT_VER := $$(curl -s https://ftp.gnu.org/gnu/unifont/ | grep -oE 'unifont-[0-9]+\.[0-9]+\.[0-9]+' | sort -Vu | tail -1 | sed 's/unifont-//')" >> $@
+	@echo "FREETYPE_VER := $$(curl -s https://download.savannah.gnu.org/releases/freetype/ | grep -oE 'freetype-[0-9]+\.[0-9]+\.[0-9]+\.tar\.xz' | sed 's/freetype-//' | sed 's/\.tar\.xz//' | sort -V | tail -1)" >> $@
+	@echo "DNSMASQ_VER := $$(curl -s https://thekelleys.org.uk/dnsmasq/ | grep -oE 'dnsmasq-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.gz' | sed -E 's/dnsmasq-(.*)\.tar\.gz/\1/' | sort -V | tail -1)" >> $@
+	@echo "Versioner sparade i $(VERSIONS_FILE)."
+
+update-versions:
+	rm -f $(VERSIONS_FILE)
+	$(MAKE) $(VERSIONS_FILE)
+
 MIKROTIKURL_ST=$(subst ",,"https://download.mikrotik.com/routeros/$(MIKROTIKVER_STABLE)/routeros-$(MIKROTIKVER_STABLE)$(device).npk")
 MIKROTIKROUTEROS_ST=$(subst ",,"routeros-$(MIKROTIKVER_STABLE)$(device).npk")
 
@@ -40,36 +66,32 @@ MIKROTIK_NETINSTALL_DIR=./
 MIKROTIK_NETINSTALL_TARBALL=$(MIKROTIK_NETINSTALL_FILE)$(MIKROTIKVER_STABLE).tar.gz
 MIKROTIK_NETINSTALL_URL=https://download.mikrotik.com/routeros/$(MIKROTIK_NETINSTALL_VER)/$(MIKROTIK_NETINSTALL_TARBALL)
 
-GRUB_VER=2.14
 GRUB_FILE=grub-$(GRUB_VER)
 GRUB_DIR=$(GRUB_FILE)/
 GRUB_TARBALL=$(GRUB_FILE).tar.xz
 GRUB_URL=https://mirror.bahnhof.net/pub/gnu/grub/$(GRUB_TARBALL)
 GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
 
-LINUX_VER=$(shell curl -s https://www.kernel.org/releases.json | jq -r '.latest_stable.version')
+LINUX_MAJOR=$(word 1,$(subst ., ,$(LINUX_VER)))
 LINUX_FILE=linux-$(LINUX_VER)
 LINUX_DIR=$(LINUX_FILE)/
 LINUX_TARBALL=$(LINUX_FILE).tar.xz
-LINUX_KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v7.x/$(LINUX_TARBALL)
+LINUX_KERNEL_URL=https://cdn.kernel.org/pub/linux/kernel/v$(LINUX_MAJOR).x/$(LINUX_TARBALL)
 
-BUSYBOX_VER=1.37.0
 BUSYBOX_FILE=busybox-$(BUSYBOX_VER)
 BUSYBOX_DIR=$(BUSYBOX_FILE)/
 BUSYBOX_TARBALL=$(BUSYBOX_FILE).tar.bz2
 BUSYBOX_URL=https://busybox.net/downloads/$(BUSYBOX_TARBALL)
 
-XORRISO_VER=1.5.8
 XORRISO_FILE=xorriso-$(XORRISO_VER)
 XORRISO_DIR=$(XORRISO_FILE)/
 XORRISO_TARBALL=$(XORRISO_FILE).pl02.tar.gz
 XORRISO_URL=https://mirror.bahnhof.net/pub/gnu/xorriso/$(XORRISO_TARBALL)
 
-SYSLINUX_VER=6.04-pre1
 SYSLINUX_FILE=syslinux-$(SYSLINUX_VER)
 SYSLINUX_DIR=$(SYSLINUX_FILE)/
 SYSLINUX_TARBALL=$(SYSLINUX_FILE).tar.xz
-SYSLINUX_URL=https://www.kernel.org/pub/linux/utils/boot/syslinux/Testing/6.04/$(SYSLINUX_TARBALL)
+SYSLINUX_URL=https://www.kernel.org/pub/linux/utils/boot/syslinux/$(SYSLINUX_TARBALL)
 SYSLINUX_FILES=bios/mbr/isohdpfx.bin bios/core/isolinux.bin bios/com32/elflink/ldlinux/ldlinux.c32 bios/com32/libutil/libutil.c32 bios/com32/lib/libcom32.c32 bios/com32/mboot/mboot.c32
 
 DROPBEAR_VER=2024.85
@@ -78,25 +100,21 @@ DROPBEAR_DIR=dropbear-$(DROPBEAR_FILE)$(DROPBEAR_VER)/
 DROPBEAR_TARBALL=$(DROPBEAR_FILE)$(DROPBEAR_VER).tar.gz
 DROPBEAR_URL=https://github.com/mkj/dropbear/archive/refs/tags/$(DROPBEAR_TARBALL)
 
-GLIBC_VER=2.40
 GLIBC_FILE=glibc-$(GLIBC_VER)
 GLIBC_DIR=$(GLIBC_FILE)/
 GLIBC_TARBALL=$(GLIBC_FILE).tar.xz
 GLIBC_URL=https://mirror.bahnhof.net/pub/gnu/glibc/$(GLIBC_TARBALL)
 
-MTOOLS_VER=4.0.49
 MTOOLS_FILE=mtools-$(MTOOLS_VER)
 MTOOLS_DIR=$(MTOOLS_FILE)/
 MTOOLS_TARBALL=$(MTOOLS_FILE).tar.gz
 MTOOLS_URL=https://mirror.bahnhof.net/pub/gnu/mtools/$(MTOOLS_TARBALL)
 
-UNIFONT_VER=17.0.04
 UNIFONT_FILE=unifont-$(UNIFONT_VER).bdf
 UNIFONT_DIR=$(UNIFONT_FILE)/
 UNIFONT_TARBALL=$(UNIFONT_FILE).gz
 UNIFONT_URL=https://mirror.bahnhof.net/pub/gnu/unifont/unifont-$(UNIFONT_VER)/$(UNIFONT_TARBALL)
 
-FREETYPE_VER=2.14.3
 FREETYPE_FILE=freetype-$(FREETYPE_VER)
 FREETYPE_DIR=$(FREETYPE_FILE)/
 FREETYPE_TARBALL=$(FREETYPE_FILE).tar.xz
@@ -108,13 +126,12 @@ DHTEST_TARBALL=$(DHTEST_FILE).tar.gz
 DHTEST_DIR=dhtest-master/
 DHTEST_URL=https://github.com/saravana815/dhtest/archive/$(DHTEST_TARBALL)
 
-STRACE_VER=7.1
+STRACE_VER=$(word 1,$(subst ., ,$(LINUX_VER))).$(word 2,$(subst ., ,$(LINUX_VER)))
 STRACE_FILE=strace-$(STRACE_VER)
-STRACE_TARBALL=$(STRACE_FILE).tar.xz
 STRACE_DIR=$(STRACE_FILE)/
-STRACE_URL=https://github.com/strace/strace/releases/download/v$(STRACE_VER)/$(STRACE_TARBALL)
+STRACE_TARBALL=$(STRACE_FILE).tar.xz
+STRACE_URL=https://github.com/strace/strace/releases/download/v$(STRACE_VER)/strace-$(STRACE_VER).tar.xz
 
-DNSMASQ_VER=2.91
 DNSMASQ_FILE=dnsmasq-$(DNSMASQ_VER)
 DNSMASQ_TARBALL=$(DNSMASQ_FILE).tar.xz
 DNSMASQ_DIR=$(DNSMASQ_FILE)/
@@ -203,8 +220,8 @@ ZZ76t1Gl2YO0KcA6rBHWS3krgv44iadH7RwB/qAdlU8C5LXZ8MnOit5ijQPKkd1Bi2gKycwYfNjZ
 sklJ/wVBoQ+5hNoOWsanAijGBneEcP3U2Y170dDGCGneq1YxC/Ac9Yuk7v+1uKnB8Gzz64pOi5UY
 t5KEMuneDeKOnW4cZXkRVsnw7IHwHSgQH+Wd0w2lJq9n+NReHsWs6tnmJ4dUf9Vv5lmoKKLdZnyc
 tdIz/35ErwToYF5dUfWMSO+auiYRkHc9w+mOMLicMkkuKAK5mdChQK7aJsvfvkDk8wY18fw01z/U
-RNceZ1oD8aF/EHkoRykVPLdNFlXMypXB6yAISiQSLh734xlHbXgUnKjoF5NsJ6msLgc5tcW49AEQ
-/66UFbyLwY+ugEK3xCwfdGiu/n8UZYzhcBm75WDi7cXA3HX1JxiUP6CUUpCJo/XOuvcltdzn+B8U
+RNceZ1oD8aF/EHkoRykVPLdNFlXMypXB6yAISiQSLh734xlHbXgUnKjoF5NsJ6msLgc5tcW49AEQ/
+66UFbyLwY+ugEK3xCwfdGiu/n8UZYzhcBm75WDi7cXA3HX1JxiUP6CUUpCJo/XOuvcltdzn+B8U
 ZDX0AT1vQMxLwT7fvqH9ePafhe4Vq0QmmpwHtDKiKuaBOcANgzVtLgvNWXSTHJy/cEVNVsSAQ5Sj
 eJQ1MAEAEN12eUYnry99tZ0yHhmpejyTDw3AepB73GB/ulA5j3DT6vkcSxooCRVHa70UqDAP3Hi4
 IETGFuv6xgxyNTqBpy4PJZcDlnbEY6ENISJCe9upvFBwbTr4D8FV9Kthr/aZDIDjD5qjlJb3PqDR
@@ -305,11 +322,6 @@ endef
 define file_hosts
 127.0.0.1 localhost.localdomain localhost
 $(IPADDR) $(HOSTNAME).local $(HOSTNAME)
-endef
-
-define file_default_cpio_list
-file /bin/busybox $(SRC_BASE)$(BUSYBOX_DIR)busybox 755 0 0
-file /sbin/strace $(SRC_BASE)$(STRACE_DIR)src/strace 755 0 0
 endef
 
 define file_init
@@ -415,6 +427,9 @@ CONFIG_PROC_SYSCTL=y
 CONFIG_TMPFS=y
 CONFIG_TMPFS_POSIX_ACL=y
 
+#Inotify support for userspace
+CONFIG_INOTIFY_USER=y
+
 #Auto make /dev and do mount it to /dev
 CONFIG_DEVTMPFS=y
 CONFIG_DEVTMPFS_MOUNT=y
@@ -471,21 +486,17 @@ INITRD /boot/$(INITRAMFS_FILE)
 APPEND $(KERNEL_ARGSV)
 endef
 
-export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_default_cpio_list file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
+export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
 
-all: stamp/makedir stamp/compile stamp/compile-strace-$(STRACE_VER) stamp/filecopy stamp/fetch-routeros stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-grub-efi-image stamp/make-iso-file
+all: stamp/makedir stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/filecopy stamp/fetch-routeros stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-grub-efi-image stamp/make-iso-file
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file stamp/localtime-file
 	$(info $(notdir $@))
 	touch $@
 
-stamp/compile: stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX_VER)
-	$(info $(notdir $@))
-	touch $@
-
 stamp/makedir:
 	$(info $(notdir $@))
-	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE) $(ROOT_BASE){boot,boot/grub,boot/grub/fonts,boot/syslinux} $(ROOT_BASE){EFI,EFI/BOOT}
+	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE)etc/init.d $(ROOT_BASE){boot,boot/grub,boot/grub/fonts,boot/syslinux} $(ROOT_BASE){EFI,EFI/BOOT}
 	touch $@
 
 stamp/fetch-kernel-$(LINUX_VER):
@@ -570,7 +581,7 @@ stamp/fetch-routeros:
 	$(info $(notdir $@))
 	cd $(DIST_BASE) && $(foreach device,$(MIKROTIKARCH),$(DOWNLOADCMD) $(MIKROTIKURL_ST);)
 	cd $(DIST_BASE) && $(DOWNLOADCMD) $(MIKROTIK_NETINSTALL_URL)
-	cd $(INITRAMFS_BASE) && tar -xf $(DIST_BASE)$(MIKROTIK_NETINSTALL_TARBALL)
+	cd $(INITRAMFS_BASE)root && tar --no-same-owner -xf $(DIST_BASE)$(MIKROTIK_NETINSTALL_TARBALL)
 
 stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	$(info $(notdir $@))
@@ -603,12 +614,18 @@ stamp/compile-freetype-$(FREETYPE_VER): stamp/fetch-freetype-$(FREETYPE_VER)
 	cd $(SRC_BASE)$(FREETYPE_DIR) && $(MAKE) $(MAKEOPT)
 	touch $@
 
-stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER)
+stamp/kernel-headers-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(GLIBC_DIR) && mkdir build
-	cd $(SRC_BASE)$(GLIBC_DIR)/build && ../configure --prefix=$(INITRAMFS_BASE) CFLAGS="-Wno-error -O3"
-	cd $(SRC_BASE)$(GLIBC_DIR)/build && $(MAKE) $(MAKEOPT)
-	cd $(SRC_BASE)$(GLIBC_DIR)/build && $(MAKE) install
+	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) headers_install ARCH=x86_64 INSTALL_HDR_PATH=$(INITRAMFS_BASE)usr
+	touch $@
+
+stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/kernel-headers-$(LINUX_VER)
+	$(info $(notdir $@))
+	mkdir -p $(SRC_BASE)$(GLIBC_DIR)build
+	cd $(SRC_BASE)$(GLIBC_DIR)build && ../configure --prefix=/usr --libdir=/usr/lib64 --disable-werror --enable-kernel=4.14 --with-headers=$(INITRAMFS_BASE)usr/include CFLAGS="-O2"
+	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
+	touch $@
 
 stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER)
 	$(info $(notdir $@))
@@ -635,10 +652,10 @@ stamp/compile-dropbear-$(DROPBEAR_VER): stamp/fetch-dropbear-$(DROPBEAR_VER)
 	$(foreach prog,$(DROPBEAR_PROGRAMS),strip $(SRC_BASE)$(DROPBEAR_DIR)/$(prog);cp $(SRC_BASE)$(DROPBEAR_DIR)/$(prog) $(INITRAMFS_BASE)bin;)
 	touch $@
 
-stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER)
+stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER) stamp/compile-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT)
-	cd $(SRC_BASE)$(DNSMASQ_DIR) && cp $(SRC_BASE)dnsmasq $(INITRAMFS_BASE)sbin
+	cd $(SRC_BASE)$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT) CC="gcc --sysroot=$(INITRAMFS_BASE)"
+	cd $(SRC_BASE)$(DNSMASQ_DIR) && cp $(SRC_BASE)$(DNSMASQ_DIR)src/dnsmasq $(INITRAMFS_BASE)sbin
 	touch $@
 
 stamp/compile-mtools-$(MTOOLS_VER): stamp/fetch-mtools-$(MTOOLS_VER)
@@ -647,22 +664,27 @@ stamp/compile-mtools-$(MTOOLS_VER): stamp/fetch-mtools-$(MTOOLS_VER)
 	cd $(SRC_BASE)$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
 	touch $@
 
-stamp/make-initramfs:
+stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/fetch-routeros stamp/filecopy
 	$(info $(notdir $@))
-	echo -n > $(INITRAMFS_BASE)default_cpio_list
-	echo "dir /root 700 0 0" >> $(INITRAMFS_BASE)default_cpio_list
-	$(foreach path,$(INITRAMFS_PATHS),echo "dir $(path) 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
-	$(foreach file,$(INITRAMFS_FILES),echo "file $(file) $(INITRAMFS_BASE)$(notdir $(file)) 766 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
-	printf "%s\n" "$$file_default_cpio_list" >> $(INITRAMFS_BASE)default_cpio_list
-	$(foreach device,$(MIKROTIKARCH),echo "file /root/$(MIKROTIKROUTEROS_ST) $(DIST_BASE)$(MIKROTIKROUTEROS_ST) 666 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
-	echo "file /root/netinstall-cli $(INITRAMFS_BASE)netinstall-cli 766 0 0" >> $(INITRAMFS_BASE)default_cpio_list
-	echo "file /root/LICENSE.txt $(INITRAMFS_BASE)LICENSE.txt 666 0 0" >> $(INITRAMFS_BASE)default_cpio_list
-	$(foreach file,$(shell $(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full),echo "slink /$(file) /bin/busybox 755 0 0" >> $(INITRAMFS_BASE)default_cpio_list;)
-	cd $(SRC_BASE)$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)default_cpio_list
-	cat $(OUT_BASE)initramfs.cpio | xz -9 -C crc32 > $(ROOT_BASE)boot/$(INITRAMFS_FILE)
+	mkdir -p $(INITRAMFS_BASE)bin $(INITRAMFS_BASE)sbin $(INITRAMFS_BASE)usr/lib64 $(INITRAMFS_BASE)dev $(INITRAMFS_BASE)proc $(INITRAMFS_BASE)sys $(INITRAMFS_BASE)mnt $(INITRAMFS_BASE)root $(INITRAMFS_BASE)etc/init.d $(INITRAMFS_BASE)lib
+	$(foreach device,$(MIKROTIKARCH),cp -f $(DIST_BASE)$(MIKROTIKROUTEROS_ST) $(INITRAMFS_BASE)root/ ;)
+	cp -f $(SRC_BASE)$(BUSYBOX_DIR)busybox $(INITRAMFS_BASE)bin/busybox
+	chmod 755 $(INITRAMFS_BASE)bin/busybox
+	for app in $$($(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full); do \
+		mkdir -p $(INITRAMFS_BASE)$$(dirname $$app) ; \
+		ln -sf /bin/busybox $(INITRAMFS_BASE)$$app ; \
+	done
+	cp -f $(SRC_BASE)$(STRACE_DIR)src/strace $(INITRAMFS_BASE)sbin/strace
+	chmod 755 $(INITRAMFS_BASE)sbin/strace
+	if [ -d $(INITRAMFS_BASE)lib64 ]; then cp -an $(INITRAMFS_BASE)lib64/. $(INITRAMFS_BASE)usr/lib64/ && rm -rf $(INITRAMFS_BASE)lib64; fi
+	if [ -d $(INITRAMFS_BASE)usr/lib ]; then cp -an $(INITRAMFS_BASE)usr/lib/. $(INITRAMFS_BASE)usr/lib64/ && rm -rf $(INITRAMFS_BASE)usr/lib; fi
+	ln -sf usr/lib64 $(INITRAMFS_BASE)lib64
+	ln -sf usr/lib64 $(INITRAMFS_BASE)lib
+	cd $(SRC_BASE)$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)
+	cat $(OUT_BASE)initramfs.cpio | xz -9 -T0 -C crc32 > $(ROOT_BASE)boot/$(INITRAMFS_FILE)
 	touch $@
 
-stamp/get-netinstall-bootcode: stamp/compile-dhtest-$(DHTEST_VER)
+stamp/get-netinstall-bootcode: stamp/compile-dhtest-$(DHTEST_VER) stamp/fetch-routeros
 	$(info $(notdir $@))
 	sudo $(INITRAMFS_BASE)netinstall-cli -i lo -a 127.0.0.2 $(INITRAMFS_BASE)routeros-$(MIKROTIKVER_STABLE).npk & echo $$! > netinstall.pid
 	sleep 2
@@ -691,76 +713,92 @@ stamp/make-grub-efi-image: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools
 stamp/init-file:
 	$(info $(notdir $@))
 	printf "%s\n" "$$file_init" > $(INITRAMFS_BASE)init
+	chmod +x $(INITRAMFS_BASE)init
 	touch $@
 
 stamp/issue-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_issue" > $(INITRAMFS_BASE)issue
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_issue" > $(INITRAMFS_BASE)etc/issue
 	touch $@
 
 stamp/hostname-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_hostname" > $(INITRAMFS_BASE)hostname
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_hostname" > $(INITRAMFS_BASE)etc/hostname
 	touch $@
 
 stamp/hosts-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_hosts" > $(INITRAMFS_BASE)hosts
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_hosts" > $(INITRAMFS_BASE)etc/hosts
 	touch $@
 
 stamp/nsswitch-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_nsswitch_conf" > $(INITRAMFS_BASE)nsswitch.conf
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_nsswitch_conf" > $(INITRAMFS_BASE)etc/nsswitch.conf
 	touch $@
 
 stamp/passwd-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_passwd" > $(INITRAMFS_BASE)passwd
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_passwd" > $(INITRAMFS_BASE)etc/passwd
 	touch $@
 
 stamp/shadow-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_shadow" > $(INITRAMFS_BASE)shadow
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_shadow" > $(INITRAMFS_BASE)etc/shadow
 	touch $@
 
 stamp/inittab-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_inittab" > $(INITRAMFS_BASE)inittab
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_inittab" > $(INITRAMFS_BASE)etc/inittab
 	touch $@
 
 stamp/group-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_group" > $(INITRAMFS_BASE)group
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_group" > $(INITRAMFS_BASE)etc/group
 	touch $@
 
 stamp/resolv-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_resolv_conf" > $(INITRAMFS_BASE)resolv.conf
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_resolv_conf" > $(INITRAMFS_BASE)etc/resolv.conf
 	touch $@
 
 stamp/localtime-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_localtime" > $(INITRAMFS_BASE)localtime
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_localtime" > $(INITRAMFS_BASE)etc/localtime
 	touch $@
 
 stamp/services-file:
 	$(info $(notdir $@))
-	printf "%s" "$$file_services" | base64 -d | xz -d > $(INITRAMFS_BASE)services
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s" "$$file_services" | base64 -d | xz -d -T0 > $(INITRAMFS_BASE)etc/services
 	touch $@
 
 stamp/protocols-file:
 	$(info $(notdir $@))
-	printf "%s" "$$file_protocols" | base64 -d | xz -d > $(INITRAMFS_BASE)protocols
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s" "$$file_protocols" | base64 -d | xz -d -T0 > $(INITRAMFS_BASE)etc/protocols
 	touch $@
 
 stamp/profile-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_profile" > $(INITRAMFS_BASE)profile
+	mkdir -p $(INITRAMFS_BASE)etc
+	printf "%s\n" "$$file_profile" > $(INITRAMFS_BASE)etc/profile
 	touch $@
 
 stamp/rcS-file:
 	$(info $(notdir $@))
-	printf "%s\n" "$$file_rcS" > $(INITRAMFS_BASE)rcS
+	mkdir -p $(INITRAMFS_BASE)etc/init.d
+	printf "%s\n" "$$file_rcS" > $(INITRAMFS_BASE)etc/init.d/rcS
+	chmod +x $(INITRAMFS_BASE)etc/init.d/rcS
 	touch $@
 
 stamp/make-iso-file:
@@ -770,7 +808,6 @@ stamp/make-iso-file:
 stamp/ver:
 	$(info $(notdir $@))
 	echo $(MIKROTIKVER_STABLE)
-	echo $(MIKROTIKVER_TESTING)
 
 clean:
 	$(info $(notdir $@))
@@ -779,6 +816,7 @@ clean:
 distclean:
 	$(info $(notdir $@))
 	git clean -ffdx
+	$(RM) $(VERSIONS_FILE)
 
 run:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
@@ -786,11 +824,11 @@ run:
 
 run-iso:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
-	qemu-system-x86_64 -m 2G -boot d -cdrom $(ISO_FILE) -enable-kvm -cpu max -nographic
+	qemu-system-x86_64 -m 2G -boot d -cdrom $(ISO_FILE) -enable-kvm -cpu max -nic user,model=e1000e -nographic
 
 run-iso-efi:
 	$(info "Run qemu <CTRL><a> <x> to exit. ")
-	qemu-system-x86_64 -m 2G -boot d -cdrom $(ISO_FILE) -enable-kvm -cpu max -nographic -pflash /usr/share/OVMF/OVMF_CODE_4M.fd
+	qemu-system-x86_64 -m 2G -boot d -cdrom $(ISO_FILE) -enable-kvm -cpu max -nic user,model=e1000e -nographic -pflash /usr/share/OVMF/OVMF_CODE_4M.fd
 
 printvars:
 	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
@@ -814,4 +852,4 @@ runtime:
 	$(MAKE) stamp/make-iso-file
 	$(MAKE) copy
 
-.PHONY: all test clean passwd group shadow hosts networks protocols services ethers rpc root guest nobody root SHELL
+.PHONY: all test clean distclean update-versions passwd group shadow hosts networks protocols services ethers rpc root guest nobody root SHELL
