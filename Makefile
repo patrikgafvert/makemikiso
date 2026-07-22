@@ -580,7 +580,7 @@ stamp/fetch-routeros:
 	$(info $(notdir $@))
 	cd $(DIST_BASE) && $(foreach device,$(MIKROTIKARCH),$(DOWNLOADCMD) $(MIKROTIKURL_ST);)
 	cd $(DIST_BASE) && $(DOWNLOADCMD) $(MIKROTIK_NETINSTALL_URL)
-	cd $(INITRAMFS_BASE)root && tar --no-same-owner -xf $(DIST_BASE)$(MIKROTIK_NETINSTALL_TARBALL)
+	touch $@
 
 stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	$(info $(notdir $@))
@@ -687,6 +687,7 @@ stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(D
 	$(info $(notdir $@))
 	mkdir -p $(INITRAMFS_BASE)bin $(INITRAMFS_BASE)sbin $(INITRAMFS_BASE)usr/lib64 $(INITRAMFS_BASE)dev $(INITRAMFS_BASE)proc $(INITRAMFS_BASE)sys $(INITRAMFS_BASE)mnt $(INITRAMFS_BASE)root $(INITRAMFS_BASE)etc/init.d $(INITRAMFS_BASE)lib
 	$(foreach device,$(MIKROTIKARCH),cp -f $(DIST_BASE)$(MIKROTIKROUTEROS_ST) $(INITRAMFS_BASE)root/ ;)
+	cd $(INITRAMFS_BASE)root && tar --no-same-owner -xf $(DIST_BASE)$(MIKROTIK_NETINSTALL_TARBALL)
 	cp -f $(SRC_BASE)$(BUSYBOX_DIR)busybox $(INITRAMFS_BASE)bin/busybox
 	chmod 755 $(INITRAMFS_BASE)bin/busybox
 	for app in $$($(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full); do \
