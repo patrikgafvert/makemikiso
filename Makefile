@@ -816,7 +816,6 @@ clean:
 distclean:
 	$(info $(notdir $@))
 	git clean -ffdx
-	$(RM) $(VERSIONS_FILE)
 
 run:
 	$(info "Run qemu <CTRL><a> <x> to exit.")
