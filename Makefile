@@ -670,9 +670,19 @@ stamp/compile-mtools-$(MTOOLS_VER): stamp/fetch-mtools-$(MTOOLS_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./configure
 	cd $(SRC_BASE)$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
+
+stamp/remove-unness:
+	$(info $(notdir $@))
+	rm -rf $(INITRAMFS_BASE)usr/share/locale
+	rm -rf $(INITRAMFS_BASE)usr/share/i18n
+	rm -rf $(INITRAMFS_BASE)usr/share/doc
+	rm -rf $(INITRAMFS_BASE)usr/share/info
+	rm -rf $(INITRAMFS_BASE)usr/share/man
+	rm -rf $(INITRAMFS_BASE)usr/include
+	rm -f  $(INITRAMFS_BASE)usr/lib64/*.a
 	touch $@
 
-stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/fetch-routeros stamp/filecopy
+stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/fetch-routeros stamp/filecopy stamp/remove-unness
 	$(info $(notdir $@))
 	mkdir -p $(INITRAMFS_BASE)bin $(INITRAMFS_BASE)sbin $(INITRAMFS_BASE)usr/lib64 $(INITRAMFS_BASE)dev $(INITRAMFS_BASE)proc $(INITRAMFS_BASE)sys $(INITRAMFS_BASE)mnt $(INITRAMFS_BASE)root $(INITRAMFS_BASE)etc/init.d $(INITRAMFS_BASE)lib
 	$(foreach device,$(MIKROTIKARCH),cp -f $(DIST_BASE)$(MIKROTIKROUTEROS_ST) $(INITRAMFS_BASE)root/ ;)
