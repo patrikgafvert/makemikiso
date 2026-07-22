@@ -620,7 +620,17 @@ stamp/kernel-headers-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/kernel-headers-$(LINUX_VER)
 	$(info $(notdir $@))
 	mkdir -p $(SRC_BASE)$(GLIBC_DIR)build
-	cd $(SRC_BASE)$(GLIBC_DIR)build && ../configure --prefix=/usr --libdir=/usr/lib64 --disable-werror --enable-kernel=4.14 --with-headers=$(INITRAMFS_BASE)usr/include CFLAGS="-O2"
+	cd $(SRC_BASE)$(GLIBC_DIR)build && ../configure \
+		--prefix=/usr \
+		--libdir=/usr/lib64 \
+		--disable-werror \
+		--enable-kernel=4.14 \
+		--with-headers=$(INITRAMFS_BASE)usr/include \
+		--disable-nls \
+		--disable-build-nscd \
+		--disable-profile \
+		--disable-crypt \
+		CFLAGS="-O2"
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
 	touch $@
@@ -841,7 +851,7 @@ check_tools:
 	$(info $(MISSING_FILES))
 
 copy:
-	scp file.iso patrik@192.168.0.42:Hämtningar
+	scp file.iso patrik@192.168.0.25:Hämtningar
 
 runtime:
 	$(MAKE) stamp/make-grub-mkimage
