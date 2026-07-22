@@ -41,9 +41,7 @@ $(VERSIONS_FILE):
 	@echo "MIKROTIKVER_STABLE := $$(curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -f1 -d' ')" >> $@
 	@echo "GRUB_VER := $$(curl -s https://ftp.gnu.org/gnu/grub/ | grep -oE 'grub-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.xz' | sed 's/grub-//' | sed 's/\.tar\.xz//' | sort -V | tail -1)" >> $@
 	@echo "LINUX_VER := $$(curl -s https://www.kernel.org/releases.json | jq -r '.latest_stable.version')" >> $@
-	@echo "SYSLINUX_DIR_NAME := $$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/ | grep -oE '[0-9]+\.[0-9]+' | sort -V | tail -1)" >> $@
-	@echo "SYSLINUX_VER := $$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/$$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/ | grep -oE '[0-9]+\.[0-9]+' | sort -V | tail -1)/ | grep -oE 'syslinux-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.(gz|bz2|xz)' | sort -V | tail -1 | sed -E 's/syslinux-(.*)\.tar\.(gz|bz2|xz)/\1/')" >> $@
-	@echo "SYSLINUX_EXT := $$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/$$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/ | grep -oE '[0-9]+\.[0-9]+' | sort -V | tail -1)/ | grep -oE 'syslinux-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.(gz|bz2|xz)' | sort -V | tail -1 | sed -E 's/.*\.tar\.(gz|bz2|xz)/\1/')" >> $@
+	@echo "SYSLINUX_VER := $$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/ | grep -oE 'syslinux-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.(xz|gz)' | sed -E 's/syslinux-(.*)\.tar\.(xz|gz)/\1/' | sort -V | tail -1)" >> $@
 	@echo "BUSYBOX_VER := $$(curl -s https://busybox.net/downloads/ | grep -oE 'busybox-[0-9]+\.[0-9]+\.[0-9]+\.tar\.bz2' | sed 's/busybox-//' | sed 's/\.tar\.bz2//' | sort -V | tail -1)" >> $@
 	@echo "XORRISO_VER := $$(curl -s https://ftp.gnu.org/gnu/xorriso/ | grep -oE 'xorriso-[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' | sed -E 's/xorriso-(.*)\.tar\.gz/\1/' | sort -Vu | tail -1)" >> $@
 	@echo "GLIBC_VER := $$(curl -s https://ftp.gnu.org/gnu/glibc/ | grep -oE 'glibc-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.xz' | sed -E 's/glibc-(.*)\.tar\.xz/\1/' | sort -V | tail -1)" >> $@
