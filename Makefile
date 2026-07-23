@@ -673,7 +673,7 @@ stamp/compile-mtools-$(MTOOLS_VER): stamp/fetch-mtools-$(MTOOLS_VER)
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./configure
 	cd $(SRC_BASE)$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
 
-stamp/remove-unness:
+stamp/remove-unness: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER)
 	$(info $(notdir $@))
 	rm -rf $(INITRAMFS_BASE)usr/share/locale
 	rm -rf $(INITRAMFS_BASE)usr/share/i18n
@@ -687,6 +687,20 @@ stamp/remove-unness:
 stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/fetch-routeros stamp/filecopy stamp/remove-unness
 	$(info $(notdir $@))
 	mkdir -p $(INITRAMFS_BASE)bin $(INITRAMFS_BASE)sbin $(INITRAMFS_BASE)usr/lib64 $(INITRAMFS_BASE)dev $(INITRAMFS_BASE)proc $(INITRAMFS_BASE)sys $(INITRAMFS_BASE)mnt $(INITRAMFS_BASE)root $(INITRAMFS_BASE)etc/init.d $(INITRAMFS_BASE)lib
+	mkdir -p $(INITRAMFS_BASE)boot $(INITRAMFS_BASE)media/floppy $(INITRAMFS_BASE)media/cdrom $(INITRAMFS_BASE)opt $(INITRAMFS_BASE)run/lock $(INITRAMFS_BASE)srv $(INITRAMFS_BASE)tmp $(INITRAMFS_BASE)var/tmp
+	mkdir -p $(INITRAMFS_BASE)etc/opt $(INITRAMFS_BASE)etc/sysconfig
+	mkdir -p $(INITRAMFS_BASE)usr/include $(INITRAMFS_BASE)usr/src $(INITRAMFS_BASE)usr/lib/locale $(INITRAMFS_BASE)usr/lib/firmware
+	mkdir -p $(INITRAMFS_BASE)usr/local/bin $(INITRAMFS_BASE)usr/local/sbin $(INITRAMFS_BASE)usr/local/lib $(INITRAMFS_BASE)usr/local/include $(INITRAMFS_BASE)usr/local/src
+	mkdir -p $(INITRAMFS_BASE)usr/share/{color,dict,doc,info,locale,misc,terminfo,zoneinfo}
+	mkdir -p $(INITRAMFS_BASE)usr/share/man/man{1,2,3,4,5,6,7,8}
+	mkdir -p $(INITRAMFS_BASE)usr/local/share/{color,dict,doc,info,locale,misc,terminfo,zoneinfo}
+	mkdir -p $(INITRAMFS_BASE)usr/local/share/man/man{1,2,3,4,5,6,7,8}
+	mkdir -p $(INITRAMFS_BASE)var/{cache,local,log,mail,opt,spool}
+	mkdir -p $(INITRAMFS_BASE)var/lib/{color,misc,locate}
+	chmod 0750 $(INITRAMFS_BASE)root
+	chmod 1777 $(INITRAMFS_BASE)tmp $(INITRAMFS_BASE)var/tmp $(INITRAMFS_BASE)run/lock
+	ln -sf ../run $(INITRAMFS_BASE)var/run
+	ln -sf ../run/lock $(INITRAMFS_BASE)var/lock
 	$(foreach device,$(MIKROTIKARCH),cp -f $(DIST_BASE)$(MIKROTIKROUTEROS_ST) $(INITRAMFS_BASE)root/ ;)
 	cd $(INITRAMFS_BASE)root && tar --no-same-owner -xf $(DIST_BASE)$(MIKROTIK_NETINSTALL_TARBALL)
 	cp -f $(SRC_BASE)$(BUSYBOX_DIR)busybox $(INITRAMFS_BASE)bin/busybox
@@ -699,6 +713,7 @@ stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(D
 	chmod 755 $(INITRAMFS_BASE)sbin/strace
 	if [ -d $(INITRAMFS_BASE)lib64 ]; then cp -an $(INITRAMFS_BASE)lib64/. $(INITRAMFS_BASE)usr/lib64/ && rm -rf $(INITRAMFS_BASE)lib64; fi
 	if [ -d $(INITRAMFS_BASE)usr/lib ]; then cp -an $(INITRAMFS_BASE)usr/lib/. $(INITRAMFS_BASE)usr/lib64/ && rm -rf $(INITRAMFS_BASE)usr/lib; fi
+	rm -rf $(INITRAMFS_BASE)lib
 	ln -sf usr/lib64 $(INITRAMFS_BASE)lib64
 	ln -sf usr/lib64 $(INITRAMFS_BASE)lib
 	cd $(SRC_BASE)$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)
