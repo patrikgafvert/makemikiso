@@ -603,7 +603,7 @@ stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) distclean
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) defconfig
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
-	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
+	#cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) busybox
 	touch $@
@@ -628,7 +628,7 @@ stamp/kernel-headers-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/kernel-headers-$(LINUX_VER)
 	$(info $(notdir $@))
 	mkdir -p $(SRC_BASE)$(GLIBC_DIR)build
-	cd $(SRC_BASE)$(GLIBC_DIR)build && CFLAGS="-s -g0" LDFLAGS="-S" ../configure \
+	cd $(SRC_BASE)$(GLIBC_DIR)build && LDFLAGS="-s" ../configure \
 		--prefix=/usr \
 		--libdir=/usr/lib64 \
 		--disable-werror \
