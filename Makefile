@@ -665,7 +665,7 @@ stamp/compile-dropbear-$(DROPBEAR_VER): stamp/fetch-dropbear-$(DROPBEAR_VER)
 
 stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER) stamp/compile-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT) CC="gcc --sysroot=$(INITRAMFS_BASE)"
+	cd $(SRC_BASE)$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT) CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-s' CFLAGS='-s'
 	cd $(SRC_BASE)$(DNSMASQ_DIR) && cp $(SRC_BASE)$(DNSMASQ_DIR)src/dnsmasq $(INITRAMFS_BASE)sbin
 	touch $@
 
