@@ -628,24 +628,23 @@ stamp/kernel-headers-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/kernel-headers-$(LINUX_VER)
 	$(info $(notdir $@))
 	mkdir -p $(SRC_BASE)$(GLIBC_DIR)build
-	cd $(SRC_BASE)$(GLIBC_DIR)build && ../configure \
+	cd $(SRC_BASE)$(GLIBC_DIR)build && CFLAGS="-s -g0" LDFLAGS="-S" ../configure \
 		--prefix=/usr \
 		--libdir=/usr/lib64 \
 		--disable-werror \
-		--enable-kernel=4.14 \
 		--with-headers=$(INITRAMFS_BASE)usr/include \
 		--disable-nls \
 		--disable-build-nscd \
 		--disable-profile \
 		--disable-crypt \
-		CFLAGS='-O2 -s' LDFLAGS='-s'
+		--disable-timezone-tools
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
 	touch $@
 
 stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(STRACE_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-pthread -s' CFLAGS='-s' ./configure
+	cd $(SRC_BASE)$(STRACE_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-pthread -s' ./configure
 	cd $(SRC_BASE)$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
 	touch $@
 
@@ -665,13 +664,13 @@ stamp/compile-dropbear-$(DROPBEAR_VER): stamp/fetch-dropbear-$(DROPBEAR_VER)
 
 stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER) stamp/compile-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT) CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-s' CFLAGS='-s'
+	cd $(SRC_BASE)$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT) CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s"
 	cd $(SRC_BASE)$(DNSMASQ_DIR) && cp $(SRC_BASE)$(DNSMASQ_DIR)src/dnsmasq $(INITRAMFS_BASE)sbin
 	touch $@
 
 stamp/compile-fileutil-$(FILEUTIL_VER): stamp/fetch-fileutil-$(FILEUTIL_VER) stamp/compile-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(FILEUTIL_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" ./configure --prefix=/usr --disable-static --without-python CFLAGS='-s' LDFLAGS='-s'
+	cd $(SRC_BASE)$(FILEUTIL_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" ./configure --prefix=/usr --disable-static --without-python LDFLAGS='-s'
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
 	touch $@
@@ -691,8 +690,6 @@ stamp/remove-unness: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DN
 	rm -rf $(INITRAMFS_BASE)usr/include
 	rm -f  $(INITRAMFS_BASE)usr/lib64/*.a
 	#find $(INITRAMFS_BASE)usr/lib64 -type f \( -name '*.so' -o -name '*.so.*' \) -exec strip --strip-unneeded {} \;
-	#strip $(INITRAMFS_BASE)sbin/dnsmasq
-	#strip $(INITRAMFS_BASE)usr/bin/file
 	touch $@
 
 stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/fetch-routeros stamp/filecopy stamp/remove-unness
