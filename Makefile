@@ -628,7 +628,8 @@ stamp/kernel-headers-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/kernel-headers-$(LINUX_VER)
 	$(info $(notdir $@))
 	mkdir -p $(SRC_BASE)$(GLIBC_DIR)build
-	cd $(SRC_BASE)$(GLIBC_DIR)build && CFLAGS="-g0" LDFLAGS="-s" ../configure \
+	cd $(SRC_BASE)$(GLIBC_DIR)sed -i 's/^# \(PARALLELMFLAGS.*\)/\1/' Makefile.in
+	cd $(SRC_BASE)$(GLIBC_DIR)build && CFLAGS="-O2 -g0" LDFLAGS="-s" ../configure \
 		--prefix=/usr \
 		--libdir=/usr/lib64 \
 		--disable-werror \
