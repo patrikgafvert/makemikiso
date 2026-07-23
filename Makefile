@@ -603,7 +603,7 @@ stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) distclean
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) defconfig
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
-	#cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) busybox
 	touch $@
@@ -628,7 +628,7 @@ stamp/kernel-headers-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/kernel-headers-$(LINUX_VER)
 	$(info $(notdir $@))
 	mkdir -p $(SRC_BASE)$(GLIBC_DIR)build
-	cd $(SRC_BASE)$(GLIBC_DIR)build && LDFLAGS="-s" ../configure \
+	cd $(SRC_BASE)$(GLIBC_DIR)build && CFLAGS="-g0" LDFLAGS="-s" ../configure \
 		--prefix=/usr \
 		--libdir=/usr/lib64 \
 		--disable-werror \
@@ -637,7 +637,8 @@ stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/kernel-he
 		--disable-build-nscd \
 		--disable-profile \
 		--disable-crypt \
-		--disable-timezone-tools
+		--disable-timezone-tools \
+		--disable-gconv-modules
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
 	touch $@
@@ -670,7 +671,7 @@ stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER) stamp/c
 
 stamp/compile-fileutil-$(FILEUTIL_VER): stamp/fetch-fileutil-$(FILEUTIL_VER) stamp/compile-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(FILEUTIL_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" ./configure --prefix=/usr --disable-static --without-python LDFLAGS='-s'
+	cd $(SRC_BASE)$(FILEUTIL_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" ./configure --prefix=/usr --disable-static LDFLAGS='-s'
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
 	touch $@
