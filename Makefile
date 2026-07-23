@@ -638,14 +638,14 @@ stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/kernel-he
 		--disable-build-nscd \
 		--disable-profile \
 		--disable-crypt \
-		CFLAGS="-O2"
+		CFLAGS='-O2 -s' LDFLAGS='-s'
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
 	touch $@
 
 stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(STRACE_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-pthread' CFLAGS='-s' ./configure
+	cd $(SRC_BASE)$(STRACE_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-pthread -s' CFLAGS='-s' ./configure
 	cd $(SRC_BASE)$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
 	touch $@
 
@@ -671,7 +671,7 @@ stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER) stamp/c
 
 stamp/compile-fileutil-$(FILEUTIL_VER): stamp/fetch-fileutil-$(FILEUTIL_VER) stamp/compile-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(FILEUTIL_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" ./configure --prefix=/usr --disable-static --without-python
+	cd $(SRC_BASE)$(FILEUTIL_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" ./configure --prefix=/usr --disable-static --without-python CFLAGS='-s' LDFLAGS='-s'
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
 	touch $@
@@ -690,9 +690,9 @@ stamp/remove-unness: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DN
 	rm -rf $(INITRAMFS_BASE)usr/share/man
 	rm -rf $(INITRAMFS_BASE)usr/include
 	rm -f  $(INITRAMFS_BASE)usr/lib64/*.a
-	find $(INITRAMFS_BASE)usr/lib64 -type f \( -name '*.so' -o -name '*.so.*' \) -exec strip --strip-unneeded {} \;
-	strip $(INITRAMFS_BASE)sbin/dnsmasq
-	strip $(INITRAMFS_BASE)usr/bin/file
+	#find $(INITRAMFS_BASE)usr/lib64 -type f \( -name '*.so' -o -name '*.so.*' \) -exec strip --strip-unneeded {} \;
+	#strip $(INITRAMFS_BASE)sbin/dnsmasq
+	#strip $(INITRAMFS_BASE)usr/bin/file
 	touch $@
 
 stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/fetch-routeros stamp/filecopy stamp/remove-unness
