@@ -49,6 +49,7 @@ $(VERSIONS_FILE):
 	@echo "UNIFONT_VER := $$(curl -s https://ftp.gnu.org/gnu/unifont/ | grep -oE 'unifont-[0-9]+\.[0-9]+\.[0-9]+' | sort -Vu | tail -1 | sed 's/unifont-//')" >> $@
 	@echo "FREETYPE_VER := $$(curl -s https://download.savannah.gnu.org/releases/freetype/ | grep -oE 'freetype-[0-9]+\.[0-9]+\.[0-9]+\.tar\.xz' | sed 's/freetype-//' | sed 's/\.tar\.xz//' | sort -V | tail -1)" >> $@
 	@echo "DNSMASQ_VER := $$(curl -s https://thekelleys.org.uk/dnsmasq/ | grep -oE 'dnsmasq-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.gz' | sed -E 's/dnsmasq-(.*)\.tar\.gz/\1/' | sort -V | tail -1)" >> $@
+	@echo "FILEUTIL_VER := $$(curl -s https://ftp.astron.com/pub/file/ | grep -oE 'file-[0-9]+\.[0-9]+\.tar\.gz' | sed -E 's/file-(.*)\.tar\.gz/\1/' | sort -V | tail -1)" >> $@
 	@echo "Versioner sparade i $(VERSIONS_FILE)."
 
 update-versions:
@@ -134,6 +135,11 @@ DNSMASQ_FILE=dnsmasq-$(DNSMASQ_VER)
 DNSMASQ_TARBALL=$(DNSMASQ_FILE).tar.xz
 DNSMASQ_DIR=$(DNSMASQ_FILE)/
 DNSMASQ_URL=https://thekelleys.org.uk/dnsmasq/$(DNSMASQ_TARBALL)
+
+FILEUTIL_FILE=file-$(FILEUTIL_VER)
+FILEUTIL_TARBALL=$(FILEUTIL_FILE).tar.gz
+FILEUTIL_DIR=$(FILEUTIL_FILE)/
+FILEUTIL_URL=https://ftp.astron.com/pub/file/$(FILEUTIL_TARBALL)
 
 define file_extra_deps_lst
 depends bli part_gpt
@@ -488,7 +494,7 @@ endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
 
-all: stamp/makedir stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/filecopy stamp/fetch-routeros stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-grub-efi-image stamp/make-iso-file
+all: stamp/makedir stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/filecopy stamp/fetch-routeros stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-grub-efi-image stamp/make-iso-file
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file stamp/localtime-file
 	$(info $(notdir $@))
@@ -577,6 +583,12 @@ stamp/fetch-dnsmasq-$(DNSMASQ_VER):
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DNSMASQ_TARBALL)
 	touch $@
 
+stamp/fetch-fileutil-$(FILEUTIL_VER):
+	$(info $(notdir $@))
+	if [ ! -f "$(DIST_BASE)$(FILEUTIL_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(FILEUTIL_URL); fi
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(FILEUTIL_TARBALL)
+	touch $@
+
 stamp/fetch-routeros:
 	$(info $(notdir $@))
 	cd $(DIST_BASE) && $(foreach device,$(MIKROTIKARCH),$(DOWNLOADCMD) $(MIKROTIKURL_ST);)
@@ -637,9 +649,9 @@ stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/kernel-he
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
 	touch $@
 
-stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER)
+stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
-	cd $(SRC_BASE)$(STRACE_DIR) && LDFLAGS='-static -pthread' CFLAGS='-s' ./configure
+	cd $(SRC_BASE)$(STRACE_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-pthread' CFLAGS='-s' ./configure
 	cd $(SRC_BASE)$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
 	touch $@
 
@@ -668,12 +680,19 @@ stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER) stamp/c
 	cd $(SRC_BASE)$(DNSMASQ_DIR) && cp $(SRC_BASE)$(DNSMASQ_DIR)src/dnsmasq $(INITRAMFS_BASE)sbin
 	touch $@
 
+stamp/compile-fileutil-$(FILEUTIL_VER): stamp/fetch-fileutil-$(FILEUTIL_VER) stamp/compile-glibc-$(GLIBC_VER)
+	$(info $(notdir $@))
+	cd $(SRC_BASE)$(FILEUTIL_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" ./configure --prefix=/usr --disable-static --without-python
+	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
+	touch $@
+
 stamp/compile-mtools-$(MTOOLS_VER): stamp/fetch-mtools-$(MTOOLS_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./configure
 	cd $(SRC_BASE)$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
 
-stamp/remove-unness: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER)
+stamp/remove-unness: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-fileutil-$(FILEUTIL_VER)
 	$(info $(notdir $@))
 	rm -rf $(INITRAMFS_BASE)usr/share/locale
 	rm -rf $(INITRAMFS_BASE)usr/share/i18n
@@ -682,9 +701,12 @@ stamp/remove-unness: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DN
 	rm -rf $(INITRAMFS_BASE)usr/share/man
 	rm -rf $(INITRAMFS_BASE)usr/include
 	rm -f  $(INITRAMFS_BASE)usr/lib64/*.a
+	find $(INITRAMFS_BASE)usr/lib64 -type f \( -name '*.so' -o -name '*.so.*' \) -exec strip --strip-unneeded {} \;
+	strip $(INITRAMFS_BASE)sbin/dnsmasq
+	strip $(INITRAMFS_BASE)usr/bin/file
 	touch $@
 
-stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/fetch-routeros stamp/filecopy stamp/remove-unness
+stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/fetch-routeros stamp/filecopy stamp/remove-unness
 	$(info $(notdir $@))
 	mkdir -p $(INITRAMFS_BASE)bin $(INITRAMFS_BASE)sbin $(INITRAMFS_BASE)usr/lib64 $(INITRAMFS_BASE)dev $(INITRAMFS_BASE)proc $(INITRAMFS_BASE)sys $(INITRAMFS_BASE)mnt $(INITRAMFS_BASE)root $(INITRAMFS_BASE)etc/init.d $(INITRAMFS_BASE)lib
 	mkdir -p $(INITRAMFS_BASE)boot $(INITRAMFS_BASE)media/floppy $(INITRAMFS_BASE)media/cdrom $(INITRAMFS_BASE)opt $(INITRAMFS_BASE)run/lock $(INITRAMFS_BASE)srv $(INITRAMFS_BASE)tmp $(INITRAMFS_BASE)var/tmp
@@ -704,6 +726,7 @@ stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(D
 	$(foreach device,$(MIKROTIKARCH),cp -f $(DIST_BASE)$(MIKROTIKROUTEROS_ST) $(INITRAMFS_BASE)root/ ;)
 	cd $(INITRAMFS_BASE)root && tar --no-same-owner -xf $(DIST_BASE)$(MIKROTIK_NETINSTALL_TARBALL)
 	cp -f $(SRC_BASE)$(BUSYBOX_DIR)busybox $(INITRAMFS_BASE)bin/busybox
+	strip $(INITRAMFS_BASE)bin/busybox
 	chmod 755 $(INITRAMFS_BASE)bin/busybox
 	for app in $$($(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full); do \
 		mkdir -p $(INITRAMFS_BASE)$$(dirname $$app) ; \
