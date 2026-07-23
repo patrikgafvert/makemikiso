@@ -553,12 +553,6 @@ stamp/fetch-mtools-$(MTOOLS_VER):
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(MTOOLS_TARBALL)
 	touch $@
 
-stamp/fetch-dhtest-$(DHTEST_VER):
-	$(info $(notdir $@))
-	if [ ! -f "$(DIST_BASE)$(DHTEST_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DHTEST_URL); fi
-	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DHTEST_TARBALL)
-	touch $@
-
 stamp/fetch-strace-$(STRACE_VER):
 	$(info $(notdir $@))
 	if [ ! -f "$(DIST_BASE)$(STRACE_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(STRACE_URL); fi
@@ -662,11 +656,6 @@ stamp/compile-grub-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
 	cd $(SRC_BASE)$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
 	touch $@
 
-stamp/compile-dhtest-$(DHTEST_VER): stamp/fetch-dhtest-$(DHTEST_VER)
-	$(info $(notdir $@))
-	cd $(SRC_BASE)$(DHTEST_DIR) && $(MAKE) $(MAKEOPT)
-	touch $@
-
 stamp/compile-dropbear-$(DROPBEAR_VER): stamp/fetch-dropbear-$(DROPBEAR_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(DROPBEAR_DIR) && ./configure --enable-static
@@ -742,14 +731,6 @@ stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(D
 	cd $(SRC_BASE)$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)
 	cat $(OUT_BASE)initramfs.cpio | xz -9 -T0 -C crc32 > $(ROOT_BASE)boot/$(INITRAMFS_FILE)
 	touch $@
-
-stamp/get-netinstall-bootcode: stamp/compile-dhtest-$(DHTEST_VER) stamp/fetch-routeros
-	$(info $(notdir $@))
-	sudo $(INITRAMFS_BASE)netinstall-cli -i lo -a 127.0.0.2 $(INITRAMFS_BASE)routeros-$(MIKROTIKVER_STABLE).npk & echo $$! > netinstall.pid
-	sleep 2
-	$(foreach var,$(MIKROTIKDEVICE),sudo $(SRC_BASE)dhtest-master/dhtest -T 5 -o "$(var)" -i lo;curl -s tftp://127.0.0.1/linux.arm > netinstall_bootcode_$(var);)
-	sudo kill -9 $(shell cat netinstall.pid)
-	$(RM) netinstall.pid
 
 stamp/make-grub-mkimage: stamp/fetch-grub-$(GRUB_VER) stamp/compile-grub-$(GRUB_VER) stamp/fetch-unifont-$(UNIFONT_VER)
 	$(info $(notdir $@))
@@ -864,14 +845,6 @@ stamp/make-iso-file:
 	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso -as mkisofs -output $(ISO_FILE) -full-iso9660-filenames -joliet -rational-rock -sysid "LINUX" -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
 	touch $@
 
-stamp/ver:
-	$(info $(notdir $@))
-	echo $(MIKROTIKVER_STABLE)
-
-clean:
-	$(info $(notdir $@))
-	$(RM) -r $(SRC_BASE) $(STAMP_BASE) $(OUT_BASE) $(ISO_FILE)
-
 distclean:
 	$(info $(notdir $@))
 	git clean -ffdx
@@ -888,26 +861,11 @@ run-iso-efi:
 	$(info "Run qemu <CTRL><a> <x> to exit. ")
 	qemu-system-x86_64 -m 2G -boot d -cdrom $(ISO_FILE) -enable-kvm -cpu max -nic user,model=e1000e -nographic -pflash /usr/share/OVMF/OVMF_CODE_4M.fd
 
-printvars:
-	$(foreach V,$(sort $(.VARIABLES)),$(if $(filter-out environment% default automatic,$(origin $V)),$(warning $V=$($V) ($(value $V)))))
-
-dir:
-	$(info $(CURDIR))
-
-test-$(MIKROTIKVER_STABLE):
-	$(info $(MIKROTIKVER_STABLE))
-
 check_tools:
 	$(info Please install these dependencies before running $(MAKEFILE_LIST) again.)
 	$(info $(MISSING_FILES))
 
 copy:
 	scp file.iso patrik@192.168.0.25:Hämtningar
-
-runtime:
-	$(MAKE) stamp/make-grub-mkimage
-	$(MAKE) stamp/make-grub-efi-image
-	$(MAKE) stamp/make-iso-file
-	$(MAKE) copy
 
 .PHONY: all test clean distclean update-versions passwd group shadow hosts networks protocols services ethers rpc root guest nobody root SHELL
