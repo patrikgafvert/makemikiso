@@ -49,7 +49,7 @@ $(VERSIONS_FILE):
 	@echo "UNIFONT_VER := $$(curl -s https://ftp.gnu.org/gnu/unifont/ | grep -oE 'unifont-[0-9]+\.[0-9]+\.[0-9]+' | sort -Vu | tail -1 | sed 's/unifont-//')" >> $@
 	@echo "FREETYPE_VER := $$(curl -s https://download.savannah.gnu.org/releases/freetype/ | grep -oE 'freetype-[0-9]+\.[0-9]+\.[0-9]+\.tar\.xz' | sed 's/freetype-//' | sed 's/\.tar\.xz//' | sort -V | tail -1)" >> $@
 	@echo "DNSMASQ_VER := $$(curl -s https://thekelleys.org.uk/dnsmasq/ | grep -oE 'dnsmasq-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.gz' | sed -E 's/dnsmasq-(.*)\.tar\.gz/\1/' | sort -V | tail -1)" >> $@
-	@echo "FILEUTIL_VER := $$(curl -s https://ftp.astron.com/pub/file/ | grep -oE 'file-[0-9]+\.[0-9]+\.tar\.gz' | sed -E 's/file-(.*)\.tar\.gz/\1/' | sort -V | tail -1)" >> $@
+	@echo "FILEUTIL_VER := $$(curl -s https://www.astron.com/pub/file/ | grep -oE 'file-[0-9]+\.[0-9]+\.tar\.gz' | sed -E 's/file-(.*)\.tar\.gz/\1/' | sort -V | tail -1)" >> $@
 	@echo "Versioner sparade i $(VERSIONS_FILE)."
 
 update-versions:
@@ -139,7 +139,7 @@ DNSMASQ_URL=https://thekelleys.org.uk/dnsmasq/$(DNSMASQ_TARBALL)
 FILEUTIL_FILE=file-$(FILEUTIL_VER)
 FILEUTIL_TARBALL=$(FILEUTIL_FILE).tar.gz
 FILEUTIL_DIR=$(FILEUTIL_FILE)/
-FILEUTIL_URL=https://ftp.astron.com/pub/file/$(FILEUTIL_TARBALL)
+FILEUTIL_URL=https://www.astron.com/pub/file/$(FILEUTIL_TARBALL)
 
 define file_extra_deps_lst
 depends bli part_gpt
