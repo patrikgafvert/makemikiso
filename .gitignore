@@ -2,3 +2,5 @@ dist/
 out/
 src/
 stamp/
+file.si
+versions.mk
