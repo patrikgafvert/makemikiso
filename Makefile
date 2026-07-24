@@ -494,13 +494,13 @@ endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
 
-all: stamp/makedir stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/filecopy stamp/fetch-routeros stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-grub-efi-image stamp/make-iso-file
+all: stamp/make-dir stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/filecopy stamp/fetch-routeros stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-grub-efi-image stamp/make-iso-file
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file stamp/localtime-file
 	$(info $(notdir $@))
 	touch $@
 
-stamp/makedir:
+stamp/make-dir:
 	$(info $(notdir $@))
 	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE)etc/init.d $(ROOT_BASE){boot,boot/grub,boot/grub/fonts,boot/syslinux} $(ROOT_BASE){EFI,EFI/BOOT}
 	touch $@
@@ -598,6 +598,11 @@ stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	ln -sf $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) $(ROOT_BASE)boot/$(KERNEL_FILE)
 	touch $@
 
+stamp/install-kernel-headers-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
+	$(info $(notdir $@))
+	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) headers_install ARCH=x86_64 INSTALL_HDR_PATH=$(INITRAMFS_BASE)usr
+	touch $@
+
 stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) distclean
@@ -620,12 +625,7 @@ stamp/compile-freetype-$(FREETYPE_VER): stamp/fetch-freetype-$(FREETYPE_VER)
 	cd $(SRC_BASE)$(FREETYPE_DIR) && $(MAKE) $(MAKEOPT)
 	touch $@
 
-stamp/kernel-headers-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
-	$(info $(notdir $@))
-	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) headers_install ARCH=x86_64 INSTALL_HDR_PATH=$(INITRAMFS_BASE)usr
-	touch $@
-
-stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/kernel-headers-$(LINUX_VER)
+stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/install-kernel-headers-$(LINUX_VER)
 	$(info $(notdir $@))
 	mkdir -p $(SRC_BASE)$(GLIBC_DIR)build
 	cd $(SRC_BASE)$(GLIBC_DIR) && sed -i 's/^# \(PARALLELMFLAGS.*\)/\1/' Makefile.in
