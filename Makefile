@@ -494,7 +494,7 @@ endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
 
-all: stamp/make-dir stamp/compile-kernel-$(LINUX_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/filecopy stamp/fetch-routeros stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-grub-efi-image stamp/make-iso-file
+all: stamp/make-dir stamp/compile-kernel-$(LINUX_VER) stamp/install-kernel-headers-$(LINUX_VER) stamp/compile-glibc-$(GLIBC_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/filecopy stamp/fetch-routeros stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-grub-efi-image stamp/make-iso-file
 
 stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file stamp/localtime-file
 	$(info $(notdir $@))
@@ -603,14 +603,13 @@ stamp/install-kernel-headers-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) headers_install ARCH=x86_64 INSTALL_HDR_PATH=$(INITRAMFS_BASE)usr
 	touch $@
 
-stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER)
+stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER) stamp/compile-glibc-$(GLIBC_VER)
 	$(info $(notdir $@))
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) distclean
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) defconfig
-	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
 	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
-	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) busybox
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) CC="gcc --sysroot=$(INITRAMFS_BASE)" busybox
 	touch $@
 
 stamp/compile-xorriso-$(XORRISO_VER): stamp/fetch-xorriso-$(XORRISO_VER)
@@ -628,7 +627,7 @@ stamp/compile-freetype-$(FREETYPE_VER): stamp/fetch-freetype-$(FREETYPE_VER)
 stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/install-kernel-headers-$(LINUX_VER)
 	$(info $(notdir $@))
 	mkdir -p $(SRC_BASE)$(GLIBC_DIR)build
-	cd $(SRC_BASE)$(GLIBC_DIR) && sed -i 's/^# \(PARALLELMFLAGS.*\)/\1/' Makefile.in
+	cd $(SRC_BASE)$(GLIBC_DIR) && sed -i 's/^# \(PARALLELMFLAGS\)\(.*\)/\1=$(MAKEOPT)/' Makefile.in
 	cd $(SRC_BASE)$(GLIBC_DIR)build && CFLAGS="-O2 -g0" LDFLAGS="-s" ../configure \
 		--prefix=/usr \
 		--libdir=/usr/lib64 \
