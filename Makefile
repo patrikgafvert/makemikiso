@@ -628,7 +628,7 @@ stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/install-k
 	$(info $(notdir $@))
 	mkdir -p $(SRC_BASE)$(GLIBC_DIR)build
 	cd $(SRC_BASE)$(GLIBC_DIR) && sed -i 's/^# \(PARALLELMFLAGS\)\(.*\)/\1=$(MAKEOPT)/' Makefile.in
-	cd $(SRC_BASE)$(GLIBC_DIR)build && CFLAGS="-O2 -g0" LDFLAGS="-s" ../configure \
+	cd $(SRC_BASE)$(GLIBC_DIR)build && ../configure \
 		--prefix=/usr \
 		--libdir=/usr/lib64 \
 		--disable-werror \
@@ -638,7 +638,8 @@ stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/install-k
 		--disable-profile \
 		--disable-crypt \
 		--disable-timezone-tools \
-		--disable-gconv-modules
+		--disable-gconv-modules \
+		CXXFLAGS="-O2 -g0" CFLAGS="-O2 -g0" LDFLAGS="-s"
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
 	touch $@
