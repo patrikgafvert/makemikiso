@@ -639,9 +639,9 @@ stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/install-k
 		--disable-crypt \
 		--disable-timezone-tools \
 		--disable-gconv-modules \
-		CXXFLAGS="-O2 -g0" CFLAGS="-O2 -g0" LDFLAGS="-s"
+		CXXFLAGS="-O2 -g0" CFLAGS="-O2 -g0"
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) $(MAKEOPT)
-	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
+	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) $(MAKEOPT) install DESTDIR=$(INITRAMFS_BASE)
 	touch $@
 
 stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER)
