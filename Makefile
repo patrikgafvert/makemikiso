@@ -691,7 +691,7 @@ stamp/remove-unness: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DN
 	rm -rf $(INITRAMFS_BASE)usr/share/man
 	rm -rf $(INITRAMFS_BASE)usr/include
 	rm -f  $(INITRAMFS_BASE)usr/lib64/*.a
-	#find $(INITRAMFS_BASE)usr/lib64 -type f \( -name '*.so' -o -name '*.so.*' \) -exec strip --strip-unneeded {} \;
+	find $(INITRAMFS_BASE) -type f -executalbe -exec strip --strip-unneeded {} \;
 	touch $@
 
 stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/fetch-routeros stamp/filecopy stamp/remove-unness
