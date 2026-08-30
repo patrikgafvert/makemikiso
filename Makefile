@@ -497,138 +497,152 @@ endef
 
 export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd file_group file_resolv_conf file_hostname file_hosts file_extra_deps_lst file_grub_early_cfg file_syslinux_cfg file_rcS file_nsswitch_conf file_profile file_shadow file_services file_protocols file_inittab file_localtime file_grub_cfg
 
-all: stamp/make-dir stamp/compile-kernel-$(LINUX_VER) stamp/install-kernel-headers-$(LINUX_VER) stamp/compile-glibc-$(GLIBC_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/filecopy stamp/fetch-routeros stamp/make-initramfs stamp/compile-freetype-$(FREETYPE_VER) stamp/compile-grub-$(GRUB_VER) stamp/copy-syslinux-files-$(SYSLINUX_VER) stamp/compile-xorriso-$(XORRISO_VER) stamp/make-grub-mkimage stamp/make-grub-efi-image stamp/make-iso-file
+# --- Riktiga utdatafiler som Make använder som mål/beroenden (istället för stamp-filer) ---
+KERNEL_OUT=$(ROOT_BASE)boot/$(KERNEL_FILE)
+INITRAMFS_CPIO=$(OUT_BASE)initramfs.cpio
+INITRAMFS_OUT=$(ROOT_BASE)boot/$(INITRAMFS_FILE)
+KERNEL_HDR=$(INITRAMFS_BASE)usr/include/linux/version.h
+GLIBC_LIBC=$(INITRAMFS_BASE)usr/lib64/libc.so.6
+BUSYBOX_BIN=$(SRC_BASE)$(BUSYBOX_DIR)busybox
+STRACE_BIN=$(SRC_BASE)$(STRACE_DIR)src/strace
+DNSMASQ_BIN=$(SRC_BASE)$(DNSMASQ_DIR)src/dnsmasq
+FILEUTIL_BIN=$(INITRAMFS_BASE)usr/bin/file
+XORRISO_BIN=$(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso
+MTOOLS_MFORMAT=$(SRC_BASE)$(MTOOLS_DIR)mformat
+MTOOLS_MCOPY=$(SRC_BASE)$(MTOOLS_DIR)mcopy
+FREETYPE_LIB=$(SRC_BASE)$(FREETYPE_DIR)objs/.libs/libfreetype.so
+GRUB_MKIMAGE=$(SRC_BASE)$(GRUB_DIR)grub-mkimage
+UNIFONT_BDF=$(DIST_BASE)unifont-$(UNIFONT_VER).bdf
+BOOTX64_EFI=$(ROOT_BASE)EFI/BOOT/BOOTX64.EFI
+EFI_IMG=$(ROOT_BASE)boot/grub/efi.img
+UNIFONT_PF2=$(ROOT_BASE)boot/grub/fonts/unifont.pf2
+GRUB_CFG=$(ROOT_BASE)boot/grub/grub.cfg
+SYSLINUX_CFG=$(ROOT_BASE)boot/syslinux/syslinux.cfg
+SYS_ISOHDPFX=$(ROOT_BASE)boot/syslinux/isohdpfx.bin
+SYS_ISOLINUX=$(ROOT_BASE)boot/syslinux/isolinux.bin
+ROUTEROS_NETINSTALL=$(DIST_BASE)$(MIKROTIK_NETINSTALL_TARBALL)
 
-stamp/filecopy: stamp/init-file stamp/issue-file stamp/passwd-file stamp/group-file stamp/resolv-file stamp/hostname-file stamp/hosts-file stamp/rcS-file stamp/nsswitch-file stamp/profile-file stamp/shadow-file stamp/services-file stamp/protocols-file stamp/inittab-file stamp/localtime-file
-	$(info $(notdir $@))
-	touch $@
+# Konfigfiler som packas in i initramfs
+INITRAMFS_CONF_FILES=$(INITRAMFS_BASE)init $(INITRAMFS_BASE)etc/issue $(INITRAMFS_BASE)etc/inittab $(INITRAMFS_BASE)etc/hostname $(INITRAMFS_BASE)etc/passwd $(INITRAMFS_BASE)etc/shadow $(INITRAMFS_BASE)etc/group $(INITRAMFS_BASE)etc/hosts $(INITRAMFS_BASE)etc/resolv.conf $(INITRAMFS_BASE)etc/nsswitch.conf $(INITRAMFS_BASE)etc/profile $(INITRAMFS_BASE)etc/localtime $(INITRAMFS_BASE)etc/services $(INITRAMFS_BASE)etc/protocols $(INITRAMFS_BASE)etc/init.d/rcS
 
-stamp/make-dir:
-	$(info $(notdir $@))
-	mkdir -p $(OUT_BASE) $(STAMP_BASE) $(DIST_BASE) $(SRC_BASE) $(INITRAMFS_BASE)etc/init.d $(ROOT_BASE){boot,boot/grub,boot/grub/fonts,boot/syslinux} $(ROOT_BASE){EFI,EFI/BOOT}
-	touch $@
+all: $(ISO_FILE)
 
-stamp/fetch-kernel-$(LINUX_VER):
-	$(info $(notdir $@))
+# --- Hämta/packa upp källkod (varje katalogs utdragning används som ordning-only-beroende) ---
+$(SRC_BASE)$(LINUX_DIR): $(VERSIONS_FILE)
+	$(info fetch-kernel-$(LINUX_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(LINUX_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(LINUX_KERNEL_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(LINUX_TARBALL)
 	touch $@
 
-stamp/fetch-busybox-$(BUSYBOX_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(BUSYBOX_DIR): $(VERSIONS_FILE)
+	$(info fetch-busybox-$(BUSYBOX_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(BUSYBOX_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(BUSYBOX_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(BUSYBOX_TARBALL)
 	touch $@
 
-stamp/fetch-xorriso-$(XORRISO_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(XORRISO_DIR): $(VERSIONS_FILE)
+	$(info fetch-xorriso-$(XORRISO_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(XORRISO_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(XORRISO_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(XORRISO_TARBALL)
 	touch $@
 
-stamp/fetch-grub-$(GRUB_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(GRUB_DIR): $(VERSIONS_FILE)
+	$(info fetch-grub-$(GRUB_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(GRUB_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(GRUB_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(GRUB_TARBALL)
 	touch $@
 
-stamp/fetch-freetype-$(FREETYPE_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(FREETYPE_DIR): $(VERSIONS_FILE)
+	$(info fetch-freetype-$(FREETYPE_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(FREETYPE_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(FREETYPE_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(FREETYPE_TARBALL)
 	touch $@
 
-stamp/fetch-unifont-$(UNIFONT_VER):
-	$(info $(notdir $@))
+$(UNIFONT_BDF): $(VERSIONS_FILE)
+	$(info fetch-unifont-$(UNIFONT_VER))
+	mkdir -p $(DIST_BASE)
 	if [ ! -f "$(DIST_BASE)$(UNIFONT_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(UNIFONT_URL); fi
-	cd $(SRC_BASE) && gunzip $(DIST_BASE)$(UNIFONT_TARBALL)
-	touch $@
+	cd $(DIST_BASE) && gunzip -kf $(DIST_BASE)$(UNIFONT_TARBALL)
 
-stamp/fetch-syslinux-$(SYSLINUX_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(SYSLINUX_DIR): $(VERSIONS_FILE)
+	$(info fetch-syslinux-$(SYSLINUX_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(SYSLINUX_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(SYSLINUX_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(SYSLINUX_TARBALL)
 	touch $@
 
-stamp/fetch-mtools-$(MTOOLS_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(MTOOLS_DIR): $(VERSIONS_FILE)
+	$(info fetch-mtools-$(MTOOLS_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(MTOOLS_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(MTOOLS_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(MTOOLS_TARBALL)
 	touch $@
 
-stamp/fetch-strace-$(STRACE_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(STRACE_DIR): $(VERSIONS_FILE)
+	$(info fetch-strace-$(STRACE_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(STRACE_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(STRACE_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(STRACE_TARBALL)
 	touch $@
 
-stamp/fetch-dropbear-$(DROPBEAR_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(DROPBEAR_DIR): $(VERSIONS_FILE)
+	$(info fetch-dropbear-$(DROPBEAR_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(DROPBEAR_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DROPBEAR_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DROPBEAR_TARBALL)
 	touch $@
 
-stamp/fetch-glibc-$(GLIBC_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(GLIBC_DIR): $(VERSIONS_FILE)
+	$(info fetch-glibc-$(GLIBC_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(GLIBC_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(GLIBC_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(GLIBC_TARBALL)
 	touch $@
 
-stamp/fetch-dnsmasq-$(DNSMASQ_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(DNSMASQ_DIR): $(VERSIONS_FILE)
+	$(info fetch-dnsmasq-$(DNSMASQ_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(DNSMASQ_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(DNSMASQ_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(DNSMASQ_TARBALL)
 	touch $@
 
-stamp/fetch-fileutil-$(FILEUTIL_VER):
-	$(info $(notdir $@))
+$(SRC_BASE)$(FILEUTIL_DIR): $(VERSIONS_FILE)
+	$(info fetch-fileutil-$(FILEUTIL_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(FILEUTIL_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(FILEUTIL_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(FILEUTIL_TARBALL)
 	touch $@
 
-stamp/fetch-routeros:
-	$(info $(notdir $@))
+$(ROUTEROS_NETINSTALL): $(VERSIONS_FILE)
+	$(info fetch-routeros)
+	mkdir -p $(DIST_BASE)
 	cd $(DIST_BASE) && $(foreach device,$(MIKROTIKARCH),$(DOWNLOADCMD) $(MIKROTIKURL_ST);)
 	cd $(DIST_BASE) && $(DOWNLOADCMD) $(MIKROTIK_NETINSTALL_URL)
 	touch $@
 
-stamp/compile-kernel-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
-	$(info $(notdir $@))
+# --- Kompilera komponenter (riktiga filer som mål) ---
+$(KERNEL_OUT): | $(SRC_BASE)$(LINUX_DIR)
+	$(info compile-kernel-$(LINUX_VER))
+	mkdir -p $(dir $(KERNEL_OUT))
 	printf "%s\n" "$$file_kernelkconfig" > $(SRC_BASE)$(LINUX_DIR)mytinyconfig
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) distclean
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) KCONFIG_ALLCONFIG=mytinyconfig allnoconfig
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) $(MAKEOPT)
-	ln -sf $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) $(ROOT_BASE)boot/$(KERNEL_FILE)
+	ln -sfn $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) $(KERNEL_OUT)
 	touch $@
 
-stamp/install-kernel-headers-$(LINUX_VER): stamp/fetch-kernel-$(LINUX_VER)
-	$(info $(notdir $@))
+$(KERNEL_HDR): | $(SRC_BASE)$(LINUX_DIR)
+	$(info install-kernel-headers-$(LINUX_VER))
+	mkdir -p $(INITRAMFS_BASE)usr
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) headers_install ARCH=x86_64 INSTALL_HDR_PATH=$(INITRAMFS_BASE)usr
-	touch $@
 
-stamp/compile-busybox-$(BUSYBOX_VER): stamp/fetch-busybox-$(BUSYBOX_VER) stamp/compile-glibc-$(GLIBC_VER)
-	$(info $(notdir $@))
-	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) distclean
-	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) defconfig
-	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
-	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
-	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) CC="gcc --sysroot=$(INITRAMFS_BASE)" busybox
-	touch $@
-
-stamp/compile-xorriso-$(XORRISO_VER): stamp/fetch-xorriso-$(XORRISO_VER)
-	$(info $(notdir $@))
-	cd $(SRC_BASE)$(XORRISO_DIR) && ./configure
-	cd $(SRC_BASE)$(XORRISO_DIR) && $(MAKE) $(MAKEOPT)
-	touch $@
-
-stamp/compile-freetype-$(FREETYPE_VER): stamp/fetch-freetype-$(FREETYPE_VER)
-	$(info $(notdir $@))
-	cd $(SRC_BASE)$(FREETYPE_DIR) && ./configure
-	cd $(SRC_BASE)$(FREETYPE_DIR) && $(MAKE) $(MAKEOPT)
-	touch $@
-
-stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/install-kernel-headers-$(LINUX_VER)
-	$(info $(notdir $@))
+$(GLIBC_LIBC): $(KERNEL_HDR) | $(SRC_BASE)$(GLIBC_DIR)
+	$(info compile-glibc-$(GLIBC_VER))
 	mkdir -p $(SRC_BASE)$(GLIBC_DIR)build
 	cd $(SRC_BASE)$(GLIBC_DIR) && sed -i 's/^# \(PARALLELMFLAGS\)\(.*\)/\1=$(MAKEOPT)/' Makefile.in
 	cd $(SRC_BASE)$(GLIBC_DIR)build && ../configure \
@@ -645,60 +659,60 @@ stamp/compile-glibc-$(GLIBC_VER): stamp/fetch-glibc-$(GLIBC_VER) stamp/install-k
 		CXXFLAGS="-O2 -g0" CFLAGS="-O2 -g0"
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(GLIBC_DIR)build && $(MAKE) $(MAKEOPT) install DESTDIR=$(INITRAMFS_BASE)
-	touch $@
 
-stamp/compile-strace-$(STRACE_VER): stamp/fetch-strace-$(STRACE_VER) stamp/compile-glibc-$(GLIBC_VER)
-	$(info $(notdir $@))
+$(BUSYBOX_BIN): $(GLIBC_LIBC) | $(SRC_BASE)$(BUSYBOX_DIR)
+	$(info compile-busybox-$(BUSYBOX_VER))
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) distclean
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) defconfig
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_TC=y/# CONFIG_TC is not set/' .config
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && sed -i 's/^CONFIG_FEATURE_IPV6=y/# CONFIG_FEATURE_IPV6 is not set/' .config
+	cd $(SRC_BASE)$(BUSYBOX_DIR) && $(MAKE) $(MAKEOPT) CC="gcc --sysroot=$(INITRAMFS_BASE)" busybox
+
+$(STRACE_BIN): $(GLIBC_LIBC) | $(SRC_BASE)$(STRACE_DIR)
+	$(info compile-strace-$(STRACE_VER))
 	cd $(SRC_BASE)$(STRACE_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-pthread -s' ./configure
 	cd $(SRC_BASE)$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
-	touch $@
 
-stamp/compile-grub-$(GRUB_VER): stamp/fetch-grub-$(GRUB_VER)
-	$(info $(notdir $@))
-	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
-	cd $(SRC_BASE)$(GRUB_DIR) && ./configure --enable-grub-mkfont --enable-target=x86_64 --with-platform=efi --disable-werror --enable-liblzma FREETYPE_CFLAGS="-I $(SRC_BASE)$(FREETYPE_DIR)include" FREETYPE_LIBS="-L $(SRC_BASE)$(FREETYPE_DIR)objs/.libs -lfreetype"
-	cd $(SRC_BASE)$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
-	touch $@
-
-stamp/compile-dropbear-$(DROPBEAR_VER): stamp/fetch-dropbear-$(DROPBEAR_VER)
-	$(info $(notdir $@))
-	cd $(SRC_BASE)$(DROPBEAR_DIR) && ./configure --enable-static
-	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
-	$(foreach prog,$(DROPBEAR_PROGRAMS),strip $(SRC_BASE)$(DROPBEAR_DIR)/$(prog);cp $(SRC_BASE)$(DROPBEAR_DIR)/$(prog) $(INITRAMFS_BASE)bin;)
-	touch $@
-
-stamp/compile-dnsmasq-$(DNSMASQ_VER): stamp/fetch-dnsmasq-$(DNSMASQ_VER) stamp/compile-glibc-$(GLIBC_VER)
-	$(info $(notdir $@))
+$(DNSMASQ_BIN): $(GLIBC_LIBC) | $(SRC_BASE)$(DNSMASQ_DIR)
+	$(info compile-dnsmasq-$(DNSMASQ_VER))
 	cd $(SRC_BASE)$(DNSMASQ_DIR) && $(MAKE) $(MAKEOPT) CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s"
 	cd $(SRC_BASE)$(DNSMASQ_DIR) && cp $(SRC_BASE)$(DNSMASQ_DIR)src/dnsmasq $(INITRAMFS_BASE)sbin
-	touch $@
 
-stamp/compile-fileutil-$(FILEUTIL_VER): stamp/fetch-fileutil-$(FILEUTIL_VER) stamp/compile-glibc-$(GLIBC_VER)
-	$(info $(notdir $@))
+$(FILEUTIL_BIN): $(GLIBC_LIBC) | $(SRC_BASE)$(FILEUTIL_DIR)
+	$(info compile-fileutil-$(FILEUTIL_VER))
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" ./configure --prefix=/usr --disable-static LDFLAGS='-s' CFLAGS='-g0'
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
-	touch $@
 
-stamp/compile-mtools-$(MTOOLS_VER): stamp/fetch-mtools-$(MTOOLS_VER)
-	$(info $(notdir $@))
+$(XORRISO_BIN): | $(SRC_BASE)$(XORRISO_DIR)
+	$(info compile-xorriso-$(XORRISO_VER))
+	cd $(SRC_BASE)$(XORRISO_DIR) && ./configure
+	cd $(SRC_BASE)$(XORRISO_DIR) && $(MAKE) $(MAKEOPT)
+
+$(FREETYPE_LIB): | $(SRC_BASE)$(FREETYPE_DIR)
+	$(info compile-freetype-$(FREETYPE_VER))
+	cd $(SRC_BASE)$(FREETYPE_DIR) && ./configure
+	cd $(SRC_BASE)$(FREETYPE_DIR) && $(MAKE) $(MAKEOPT)
+
+$(GRUB_MKIMAGE): $(FREETYPE_LIB) | $(SRC_BASE)$(GRUB_DIR)
+	$(info compile-grub-$(GRUB_VER))
+	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
+	cd $(SRC_BASE)$(GRUB_DIR) && ./configure --enable-grub-mkfont --enable-target=x86_64 --with-platform=efi --disable-werror --enable-liblzma FREETYPE_CFLAGS="-I $(SRC_BASE)$(FREETYPE_DIR)include" FREETYPE_LIBS="-L $(SRC_BASE)$(FREETYPE_DIR)objs/.libs -lfreetype"
+	cd $(SRC_BASE)$(GRUB_DIR) && $(MAKE) $(MAKEOPT)
+
+$(MTOOLS_MFORMAT) $(MTOOLS_MCOPY): | $(SRC_BASE)$(MTOOLS_DIR)
+	$(info compile-mtools-$(MTOOLS_VER))
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./configure
 	cd $(SRC_BASE)$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
 
-stamp/remove-unness: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-fileutil-$(FILEUTIL_VER)
-	$(info $(notdir $@))
-	rm -rf $(INITRAMFS_BASE)usr/share/locale
-	rm -rf $(INITRAMFS_BASE)usr/share/i18n
-	rm -rf $(INITRAMFS_BASE)usr/share/doc
-	rm -rf $(INITRAMFS_BASE)usr/share/info
-	rm -rf $(INITRAMFS_BASE)usr/share/man
-	rm -rf $(INITRAMFS_BASE)usr/include
-	rm -f  $(INITRAMFS_BASE)usr/lib64/*.a
-	find $(INITRAMFS_BASE) -type f -executable -exec strip --strip-unneeded {} \;
-	touch $@
+$(SRC_BASE)$(DROPBEAR_DIR)dropbear: | $(SRC_BASE)$(DROPBEAR_DIR)
+	$(info compile-dropbear-$(DROPBEAR_VER))
+	cd $(SRC_BASE)$(DROPBEAR_DIR) && ./configure --enable-static
+	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
+	$(foreach prog,$(DROPBEAR_PROGRAMS),strip $(SRC_BASE)$(DROPBEAR_DIR)/$(prog);cp $(SRC_BASE)$(DROPBEAR_DIR)/$(prog) $(INITRAMFS_BASE)bin;)
 
-stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(DNSMASQ_VER) stamp/compile-busybox-$(BUSYBOX_VER) stamp/compile-strace-$(STRACE_VER) stamp/compile-fileutil-$(FILEUTIL_VER) stamp/fetch-routeros stamp/filecopy stamp/remove-unness
-	$(info $(notdir $@))
+$(INITRAMFS_OUT): $(BUSYBOX_BIN) $(STRACE_BIN) $(DNSMASQ_BIN) $(GLIBC_LIBC) $(FILEUTIL_BIN) $(ROUTEROS_NETINSTALL) $(INITRAMFS_CONF_FILES) | $(SRC_BASE)$(LINUX_DIR) $(SRC_BASE)$(BUSYBOX_DIR)
+	$(info make-initramfs)
 	mkdir -p $(INITRAMFS_BASE)bin $(INITRAMFS_BASE)sbin $(INITRAMFS_BASE)usr/lib64 $(INITRAMFS_BASE)dev $(INITRAMFS_BASE)proc $(INITRAMFS_BASE)sys $(INITRAMFS_BASE)mnt $(INITRAMFS_BASE)root $(INITRAMFS_BASE)etc/init.d $(INITRAMFS_BASE)lib
 	mkdir -p $(INITRAMFS_BASE)boot $(INITRAMFS_BASE)media/floppy $(INITRAMFS_BASE)media/cdrom $(INITRAMFS_BASE)opt $(INITRAMFS_BASE)run/lock $(INITRAMFS_BASE)srv $(INITRAMFS_BASE)tmp $(INITRAMFS_BASE)var/tmp
 	mkdir -p $(INITRAMFS_BASE)etc/opt $(INITRAMFS_BASE)etc/sysconfig
@@ -716,135 +730,146 @@ stamp/make-initramfs: stamp/compile-glibc-$(GLIBC_VER) stamp/compile-dnsmasq-$(D
 	ln -sf ../run/lock $(INITRAMFS_BASE)var/lock
 	$(foreach device,$(MIKROTIKARCH),cp -f $(DIST_BASE)$(MIKROTIKROUTEROS_ST) $(INITRAMFS_BASE)root/ ;)
 	cd $(INITRAMFS_BASE)root && tar --no-same-owner -xf $(DIST_BASE)$(MIKROTIK_NETINSTALL_TARBALL)
-	cp -f $(SRC_BASE)$(BUSYBOX_DIR)busybox $(INITRAMFS_BASE)bin/busybox
+	cp -f $(BUSYBOX_BIN) $(INITRAMFS_BASE)bin/busybox
 	strip $(INITRAMFS_BASE)bin/busybox
 	chmod 755 $(INITRAMFS_BASE)bin/busybox
-	for app in $$($(SRC_BASE)$(BUSYBOX_DIR)busybox --list-full); do \
+	for app in $$($(BUSYBOX_BIN) --list-full); do \
 		mkdir -p $(INITRAMFS_BASE)$$(dirname $$app) ; \
 		ln -sf /bin/busybox $(INITRAMFS_BASE)$$app ; \
 	done
-	cp -f $(SRC_BASE)$(STRACE_DIR)src/strace $(INITRAMFS_BASE)sbin/strace
+	cp -f $(STRACE_BIN) $(INITRAMFS_BASE)sbin/strace
 	chmod 755 $(INITRAMFS_BASE)sbin/strace
 	if [ -d $(INITRAMFS_BASE)lib64 ]; then cp -an $(INITRAMFS_BASE)lib64/. $(INITRAMFS_BASE)usr/lib64/ && rm -rf $(INITRAMFS_BASE)lib64; fi
 	if [ -d $(INITRAMFS_BASE)usr/lib ]; then cp -an $(INITRAMFS_BASE)usr/lib/. $(INITRAMFS_BASE)usr/lib64/ && rm -rf $(INITRAMFS_BASE)usr/lib; fi
+	rm -rf $(INITRAMFS_BASE)usr/share/locale
+	rm -rf $(INITRAMFS_BASE)usr/share/i18n
+	rm -rf $(INITRAMFS_BASE)usr/share/doc
+	rm -rf $(INITRAMFS_BASE)usr/share/info
+	rm -rf $(INITRAMFS_BASE)usr/share/man
+	rm -rf $(INITRAMFS_BASE)usr/include
+	rm -f  $(INITRAMFS_BASE)usr/lib64/*.a
+	find $(INITRAMFS_BASE) -type f -executable -exec strip --strip-unneeded {} \;
 	rm -rf $(INITRAMFS_BASE)lib
 	ln -sf usr/lib64 $(INITRAMFS_BASE)lib64
 	ln -sf usr/lib64 $(INITRAMFS_BASE)lib
-	cd $(SRC_BASE)$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(OUT_BASE)initramfs.cpio $(INITRAMFS_BASE)
-	cat $(OUT_BASE)initramfs.cpio | xz -9 -T0 -C crc32 > $(ROOT_BASE)boot/$(INITRAMFS_FILE)
+	cd $(SRC_BASE)$(LINUX_DIR) && ./usr/gen_initramfs.sh -o $(INITRAMFS_CPIO) $(INITRAMFS_BASE)
+	cat $(INITRAMFS_CPIO) | xz -9 -T0 -C crc32 > $(INITRAMFS_OUT)
 	touch $@
 
-stamp/make-grub-mkimage: stamp/fetch-grub-$(GRUB_VER) stamp/compile-grub-$(GRUB_VER) stamp/fetch-unifont-$(UNIFONT_VER)
-	$(info $(notdir $@))
+$(BOOTX64_EFI): $(GRUB_MKIMAGE) $(UNIFONT_BDF)
+	$(info make-grub-mkimage)
+	mkdir -p $(dir $(BOOTX64_EFI))
 	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_grub_early_cfg" > grub_early.cfg
-	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(ROOT_BASE)EFI/BOOT/BOOTX64.EFI" --format="x86_64-efi" --compression="xz" --directory="./grub-core" $(GRUB_MODULES)
-	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkfont -o $(ROOT_BASE)boot/grub/fonts/unifont.pf2 $(DIST_BASE)unifont-$(UNIFONT_VER).bdf
-	printf "%s\n" "$$file_grub_cfg" > $(ROOT_BASE)boot/grub/grub.cfg
+	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(BOOTX64_EFI)" --format="x86_64-efi" --compression="xz" --directory="./grub-core" $(GRUB_MODULES)
 	touch $@
 
-stamp/copy-syslinux-files-$(SYSLINUX_VER): stamp/fetch-syslinux-$(SYSLINUX_VER)
-	$(foreach file,$(SYSLINUX_FILES),ln -sf $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
-	printf "%s\n" "$$file_syslinux_cfg" > $(ROOT_BASE)boot/syslinux/syslinux.cfg
+$(UNIFONT_PF2): $(GRUB_MKIMAGE) $(UNIFONT_BDF)
+	$(info make-grub-mkfont)
+	mkdir -p $(dir $(UNIFONT_PF2))
+	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkfont -o $(UNIFONT_PF2) $(UNIFONT_BDF)
 	touch $@
 
-stamp/make-grub-efi-image: stamp/fetch-mtools-$(MTOOLS_VER) stamp/compile-mtools-$(MTOOLS_VER)
-	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mformat -i $(ROOT_BASE)boot/grub/efi.img -C -f 1440 -N 0 ::
-	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mcopy -i $(ROOT_BASE)boot/grub/efi.img -s $(ROOT_BASE)EFI ::
+$(GRUB_CFG):
+	$(info make-grub.cfg)
+	mkdir -p $(dir $(GRUB_CFG))
+	printf "%s\n" "$$file_grub_cfg" > $(GRUB_CFG)
 	touch $@
 
-stamp/init-file:
-	$(info $(notdir $@))
-	printf "%s\n" "$$file_init" > $(INITRAMFS_BASE)init
-	chmod +x $(INITRAMFS_BASE)init
+$(SYSLINUX_CFG): | $(SRC_BASE)$(SYSLINUX_DIR)
+	$(info copy-syslinux-files-$(SYSLINUX_VER))
+	mkdir -p $(dir $(SYSLINUX_CFG))
+	$(foreach file,$(SYSLINUX_FILES),ln -sfn $(SRC_BASE)$(SYSLINUX_DIR)/$(file) $(ROOT_BASE)boot/syslinux/$(notdir $(file));)
+	printf "%s\n" "$$file_syslinux_cfg" > $(SYSLINUX_CFG)
 	touch $@
 
-stamp/issue-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_issue" > $(INITRAMFS_BASE)etc/issue
+$(EFI_IMG): $(MTOOLS_MFORMAT) $(MTOOLS_MCOPY) $(BOOTX64_EFI)
+	$(info make-grub-efi-image)
+	mkdir -p $(dir $(EFI_IMG))
+	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mformat -i $(EFI_IMG) -C -f 1440 -N 0 ::
+	cd $(SRC_BASE)$(MTOOLS_DIR) && ./mcopy -i $(EFI_IMG) -s $(ROOT_BASE)EFI ::
 	touch $@
 
-stamp/hostname-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_hostname" > $(INITRAMFS_BASE)etc/hostname
-	touch $@
+$(INITRAMFS_BASE)init:
+	$(info init-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_init" > $@
+	chmod +x $@
 
-stamp/hosts-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_hosts" > $(INITRAMFS_BASE)etc/hosts
-	touch $@
+$(INITRAMFS_BASE)etc/issue:
+	$(info issue-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_issue" > $@
 
-stamp/nsswitch-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_nsswitch_conf" > $(INITRAMFS_BASE)etc/nsswitch.conf
-	touch $@
+$(INITRAMFS_BASE)etc/hostname:
+	$(info hostname-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_hostname" > $@
 
-stamp/passwd-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_passwd" > $(INITRAMFS_BASE)etc/passwd
-	touch $@
+$(INITRAMFS_BASE)etc/hosts:
+	$(info hosts-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_hosts" > $@
 
-stamp/shadow-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_shadow" > $(INITRAMFS_BASE)etc/shadow
-	touch $@
+$(INITRAMFS_BASE)etc/nsswitch.conf:
+	$(info nsswitch-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_nsswitch_conf" > $@
 
-stamp/inittab-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_inittab" > $(INITRAMFS_BASE)etc/inittab
-	touch $@
+$(INITRAMFS_BASE)etc/passwd:
+	$(info passwd-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_passwd" > $@
 
-stamp/group-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_group" > $(INITRAMFS_BASE)etc/group
-	touch $@
+$(INITRAMFS_BASE)etc/shadow:
+	$(info shadow-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_shadow" > $@
 
-stamp/resolv-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_resolv_conf" > $(INITRAMFS_BASE)etc/resolv.conf
-	touch $@
+$(INITRAMFS_BASE)etc/inittab:
+	$(info inittab-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_inittab" > $@
 
-stamp/localtime-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_localtime" > $(INITRAMFS_BASE)etc/localtime
-	touch $@
+$(INITRAMFS_BASE)etc/group:
+	$(info group-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_group" > $@
 
-stamp/services-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s" "$$file_services" | base64 -d | xz -d -T0 > $(INITRAMFS_BASE)etc/services
-	touch $@
+$(INITRAMFS_BASE)etc/resolv.conf:
+	$(info resolv-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_resolv_conf" > $@
 
-stamp/protocols-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s" "$$file_protocols" | base64 -d | xz -d -T0 > $(INITRAMFS_BASE)etc/protocols
-	touch $@
+$(INITRAMFS_BASE)etc/localtime:
+	$(info localtime-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_localtime" > $@
 
-stamp/profile-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc
-	printf "%s\n" "$$file_profile" > $(INITRAMFS_BASE)etc/profile
-	touch $@
+$(INITRAMFS_BASE)etc/services:
+	$(info services-file)
+	mkdir -p $(dir $@)
+	printf "%s" "$$file_services" | base64 -d | xz -d -T0 > $@
 
-stamp/rcS-file:
-	$(info $(notdir $@))
-	mkdir -p $(INITRAMFS_BASE)etc/init.d
-	printf "%s\n" "$$file_rcS" > $(INITRAMFS_BASE)etc/init.d/rcS
-	chmod +x $(INITRAMFS_BASE)etc/init.d/rcS
-	touch $@
+$(INITRAMFS_BASE)etc/protocols:
+	$(info protocols-file)
+	mkdir -p $(dir $@)
+	printf "%s" "$$file_protocols" | base64 -d | xz -d -T0 > $@
 
-stamp/make-iso-file:
-	$(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso -as mkisofs -output $(ISO_FILE) -full-iso9660-filenames -joliet -rational-rock -sysid "LINUX" -volid "NETINSTALL" -follow-links -isohybrid-mbr ${ROOT_BASE}boot/syslinux/isohdpfx.bin -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
+$(INITRAMFS_BASE)etc/profile:
+	$(info profile-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_profile" > $@
+
+$(INITRAMFS_BASE)etc/init.d/rcS:
+	$(info rcS-file)
+	mkdir -p $(dir $@)
+	printf "%s\n" "$$file_rcS" > $@
+	chmod +x $@
+
+$(ISO_FILE): $(XORRISO_BIN) $(KERNEL_OUT) $(INITRAMFS_OUT) $(EFI_IMG) $(BOOTX64_EFI) $(GRUB_CFG) $(UNIFONT_PF2) $(SYSLINUX_CFG) $(SYS_ISOHDPFX) $(SYS_ISOLINUX)
+	$(info make-iso-file)
+	mkdir -p $(dir $(ISO_FILE))
+	$(XORRISO_BIN) -as mkisofs -output $@ -full-iso9660-filenames -joliet -rational-rock -sysid "LINUX" -volid "NETINSTALL" -follow-links -isohybrid-mbr $(SYS_ISOHDPFX) -eltorito-boot boot/syslinux/isolinux.bin -eltorito-catalog boot/syslinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat $(ROOT_BASE)
 	touch $@
 
 distclean:
@@ -870,4 +895,4 @@ check_tools:
 copy:
 	scp file.iso patrik@192.168.0.25:Hämtningar
 
-.PHONY: all test clean distclean update-versions passwd group shadow hosts networks protocols services ethers rpc root guest nobody root SHELL
+.PHONY: all test clean distclean update-versions run run-iso run-iso-efi check_tools copy passwd group shadow hosts networks protocols services ethers rpc root guest nobody root SHELL
