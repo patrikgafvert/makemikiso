@@ -636,7 +636,7 @@ $(KERNEL_OUT): | $(SRC_BASE)$(LINUX_DIR)
 	ln -sfn $(SRC_BASE)$(LINUX_DIR)arch/x86_64/boot/$(KERNEL_FILE) $(KERNEL_OUT)
 	touch $@
 
-$(KERNEL_HDR): | $(SRC_BASE)$(LINUX_DIR)
+$(KERNEL_HDR): $(KERNEL_OUT) | $(SRC_BASE)$(LINUX_DIR)
 	$(info install-kernel-headers-$(LINUX_VER))
 	mkdir -p $(INITRAMFS_BASE)usr
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) headers_install ARCH=x86_64 INSTALL_HDR_PATH=$(INITRAMFS_BASE)usr
