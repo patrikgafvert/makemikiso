@@ -694,6 +694,8 @@ $(FREETYPE_LIB): | $(SRC_BASE)$(FREETYPE_DIR)
 	cd $(SRC_BASE)$(FREETYPE_DIR) && ./configure
 	cd $(SRC_BASE)$(FREETYPE_DIR) && $(MAKE) $(MAKEOPT)
 
+FREETYPE_LIB_PATH=$(SRC_BASE)$(FREETYPE_DIR)objs/.libs
+
 $(GRUB_MKIMAGE): $(FREETYPE_LIB) | $(SRC_BASE)$(GRUB_DIR)
 	$(info compile-grub-$(GRUB_VER))
 	cd $(SRC_BASE)$(GRUB_DIR) && printf "%s\n" "$$file_extra_deps_lst" > grub-core/extra_deps.lst
@@ -763,10 +765,10 @@ $(BOOTX64_EFI): $(GRUB_MKIMAGE) $(UNIFONT_BDF)
 	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkimage --config="./grub_early.cfg" --prefix="/boot/grub" --output="$(BOOTX64_EFI)" --format="x86_64-efi" --compression="xz" --directory="./grub-core" $(GRUB_MODULES)
 	touch $@
 
-$(UNIFONT_PF2): $(GRUB_MKIMAGE) $(UNIFONT_BDF)
+$(UNIFONT_PF2): $(GRUB_MKIMAGE) $(FREETYPE_LIB) $(UNIFONT_BDF)
 	$(info make-grub-mkfont)
 	mkdir -p $(dir $(UNIFONT_PF2))
-	cd $(SRC_BASE)$(GRUB_DIR) && ./grub-mkfont -o $(UNIFONT_PF2) $(UNIFONT_BDF)
+	cd $(SRC_BASE)$(GRUB_DIR) && LD_LIBRARY_PATH=$(FREETYPE_LIB_PATH) ./grub-mkfont -o $(UNIFONT_PF2) $(UNIFONT_BDF)
 	touch $@
 
 $(GRUB_CFG):
