@@ -52,6 +52,7 @@ $(VERSIONS_FILE):
 	@echo "DNSMASQ_VER := $$(curl -s https://thekelleys.org.uk/dnsmasq/ | grep -oE 'dnsmasq-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.gz' | sed -E 's/dnsmasq-(.*)\.tar\.gz/\1/' | sort -V | tail -1)" >> $@
 	@echo "FILEUTIL_VER := $$(curl -s https://www.astron.com/pub/file/ | grep -oE 'file-[0-9]+\.[0-9]+\.tar\.gz' | sed -E 's/file-(.*)\.tar\.gz/\1/' | sort -V | tail -1)" >> $@
 	@echo "Versioner sparade i $(VERSIONS_FILE)."
+	@cat $(VERSIONS_FILE)
 
 update-versions:
 	rm -f $(VERSIONS_FILE)
