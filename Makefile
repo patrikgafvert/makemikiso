@@ -48,6 +48,7 @@ $(VERSIONS_FILE):
 	@echo "DROPBEAR_VER := $$(curl -s https://github.com/mkj/dropbear/releases | grep -oE 'DROPBEAR_[0-9]+\.[0-9]+' | sed 's/DROPBEAR_//' | sort -Vu | tail -1)" >> $@
 	@echo "ZLIB_VER := $$(curl -s https://github.com/madler/zlib/releases | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/v//' | sort -Vu | tail -1)" >> $@
 	@echo "LIBCRYPT_VER := $$(curl -s https://github.com/besser82/libxcrypt/releases.atom | grep -oE '<title>v[0-9]+\.[0-9]+\.[0-9]+' | sed -E 's/<title>v//' | sort -Vu | tail -1)" >> $@
+	@echo "OPENSSL_VER := $$(curl -s https://github.com/openssl/openssl/releases.atom | grep -oE '<title>OpenSSL [0-9]+\.[0-9]+\.[0-9]+' | sed -E 's/<title>OpenSSL //' | sort -Vu | tail -1)" >> $@
 	@echo "MTOOLS_VER := $$(curl -s https://ftp.gnu.org/gnu/mtools/ | grep -oE 'mtools-[0-9]+\.[0-9]+\.[0-9]+\.tar\.bz2' | sed -E 's/mtools-(.*)\.tar\.bz2/\1/' | sort -Vu | tail -1)" >> $@
 	@echo "UNIFONT_VER := $$(curl -s https://ftp.gnu.org/gnu/unifont/ | grep -oE 'unifont-[0-9]+\.[0-9]+\.[0-9]+' | sort -Vu | tail -1 | sed 's/unifont-//')" >> $@
 	@echo "FREETYPE_VER := $$(curl -s https://download.savannah.gnu.org/releases/freetype/ | grep -oE 'freetype-[0-9]+\.[0-9]+\.[0-9]+\.tar\.xz' | sed 's/freetype-//' | sed 's/\.tar\.xz//' | sort -V | tail -1)" >> $@
@@ -111,6 +112,11 @@ LIBCRYPT_FILE=libxcrypt-$(LIBCRYPT_VER)
 LIBCRYPT_DIR=$(LIBCRYPT_FILE)/
 LIBCRYPT_TARBALL=$(LIBCRYPT_FILE).tar.xz
 LIBCRYPT_URL=https://github.com/besser82/libxcrypt/releases/download/v$(LIBCRYPT_VER)/$(LIBCRYPT_TARBALL)
+
+OPENSSL_FILE=openssl-$(OPENSSL_VER)
+OPENSSL_DIR=openssl-openssl-$(OPENSSL_VER)/
+OPENSSL_TARBALL=$(OPENSSL_FILE).tar.gz
+OPENSSL_URL=https://github.com/openssl/openssl/archive/refs/tags/$(OPENSSL_FILE).tar.gz
 
 GLIBC_FILE=glibc-$(GLIBC_VER)
 GLIBC_DIR=$(GLIBC_FILE)/
@@ -518,6 +524,7 @@ KERNEL_HDR=$(INITRAMFS_BASE)usr/include/linux/version.h
 GLIBC_LIBC=$(INITRAMFS_BASE)usr/lib64/libc.so.6
 ZLIB_LIB=$(INITRAMFS_BASE)usr/lib64/libz.so
 LIBCRYPT_LIB=$(INITRAMFS_BASE)usr/lib64/libcrypt.so.1
+OPENSSL_LIB=$(INITRAMFS_BASE)usr/lib64/libcrypto.so
 BUSYBOX_BIN=$(SRC_BASE)$(BUSYBOX_DIR)busybox
 STRACE_BIN=$(SRC_BASE)$(STRACE_DIR)src/strace
 DROPBEAR_BIN=$(SRC_BASE)$(DROPBEAR_DIR)dropbear
@@ -625,6 +632,13 @@ $(SRC_BASE)$(LIBCRYPT_DIR): $(VERSIONS_FILE)
 	mkdir -p $(DIST_BASE) $(SRC_BASE)
 	if [ ! -f "$(DIST_BASE)$(LIBCRYPT_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(LIBCRYPT_URL); fi
 	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(LIBCRYPT_TARBALL)
+	touch $@
+
+$(SRC_BASE)$(OPENSSL_DIR): $(VERSIONS_FILE)
+	$(info fetch-openssl-$(OPENSSL_VER))
+	mkdir -p $(DIST_BASE) $(SRC_BASE)
+	if [ ! -f "$(DIST_BASE)$(OPENSSL_TARBALL)" ]; then cd $(DIST_BASE) && $(DOWNLOADCMD) $(OPENSSL_URL); fi
+	cd $(SRC_BASE) && tar -xf $(DIST_BASE)$(OPENSSL_TARBALL)
 	touch $@
 
 $(SRC_BASE)$(GLIBC_DIR): $(VERSIONS_FILE)
@@ -749,13 +763,19 @@ $(LIBCRYPT_LIB): $(GLIBC_LIBC) | $(SRC_BASE)$(LIBCRYPT_DIR)
 	cd $(SRC_BASE)$(LIBCRYPT_DIR) && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(LIBCRYPT_DIR) && $(MAKE) $(MAKEOPT) install DESTDIR=$(INITRAMFS_BASE)
 
+$(OPENSSL_LIB): $(GLIBC_LIBC) | $(SRC_BASE)$(OPENSSL_DIR)
+	$(info compile-openssl-$(OPENSSL_VER))
+	cd $(SRC_BASE)$(OPENSSL_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s" ./config --prefix=/usr --libdir=/usr/lib64
+	cd $(SRC_BASE)$(OPENSSL_DIR) && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(OPENSSL_DIR) && $(MAKE) $(MAKEOPT) install_sw DESTDIR=$(INITRAMFS_BASE)
+
 $(DROPBEAR_BIN): $(LIBCRYPT_LIB) $(ZLIB_LIB) $(GLIBC_LIBC) | $(SRC_BASE)$(DROPBEAR_DIR)
 	$(info compile-dropbear-$(DROPBEAR_VER))
 	cd $(SRC_BASE)$(DROPBEAR_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s" ./configure --prefix=/usr
 	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) $(MAKEOPT) PROGRAMS="$(DROPBEAR_PROGRAMS)"
 	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) install DESTDIR=$(INITRAMFS_BASE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
 
-$(INITRAMFS_OUT): $(BUSYBOX_BIN) $(STRACE_BIN) $(DROPBEAR_BIN) $(ZLIB_LIB) $(LIBCRYPT_LIB) $(DNSMASQ_BIN) $(GLIBC_LIBC) $(FILEUTIL_BIN) $(ROUTEROS_NETINSTALL) $(INITRAMFS_CONF_FILES) | $(SRC_BASE)$(LINUX_DIR) $(SRC_BASE)$(BUSYBOX_DIR)
+$(INITRAMFS_OUT): $(BUSYBOX_BIN) $(STRACE_BIN) $(DROPBEAR_BIN) $(ZLIB_LIB) $(LIBCRYPT_LIB) $(OPENSSL_LIB) $(DNSMASQ_BIN) $(GLIBC_LIBC) $(FILEUTIL_BIN) $(ROUTEROS_NETINSTALL) $(INITRAMFS_CONF_FILES) | $(SRC_BASE)$(LINUX_DIR) $(SRC_BASE)$(BUSYBOX_DIR)
 	$(info make-initramfs)
 	mkdir -p $(INITRAMFS_BASE)bin $(INITRAMFS_BASE)sbin $(INITRAMFS_BASE)usr/lib64 $(INITRAMFS_BASE)dev $(INITRAMFS_BASE)proc $(INITRAMFS_BASE)sys $(INITRAMFS_BASE)mnt $(INITRAMFS_BASE)root $(INITRAMFS_BASE)etc/init.d $(INITRAMFS_BASE)lib
 	mkdir -p $(INITRAMFS_BASE)boot $(INITRAMFS_BASE)media/floppy $(INITRAMFS_BASE)media/cdrom $(INITRAMFS_BASE)opt $(INITRAMFS_BASE)run/lock $(INITRAMFS_BASE)srv $(INITRAMFS_BASE)tmp $(INITRAMFS_BASE)var/tmp
