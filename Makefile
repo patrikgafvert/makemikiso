@@ -45,6 +45,7 @@ $(VERSIONS_FILE):
 	@echo "BUSYBOX_VER := $$(curl -s https://busybox.net/downloads/ | grep -oE 'busybox-[0-9]+\.[0-9]+\.[0-9]+\.tar\.bz2' | sed 's/busybox-//' | sed 's/\.tar\.bz2//' | sort -V | tail -1)" >> $@
 	@echo "XORRISO_VER := $$(curl -s https://ftp.gnu.org/gnu/xorriso/ | grep -oE 'xorriso-[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' | sed -E 's/xorriso-(.*)\.tar\.gz/\1/' | sort -Vu | tail -1)" >> $@
 	@echo "GLIBC_VER := $$(curl -s https://ftp.gnu.org/gnu/glibc/ | grep -oE 'glibc-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.xz' | sed -E 's/glibc-(.*)\.tar\.xz/\1/' | sort -V | tail -1)" >> $@
+	@echo "DROPBEAR_VER := $$(curl -s https://github.com/mkj/dropbear/releases | grep -oE 'DROPBEAR_[0-9]+\.[0-9]+' | sed 's/DROPBEAR_//' | sort -Vu | tail -1)" >> $@
 	@echo "MTOOLS_VER := $$(curl -s https://ftp.gnu.org/gnu/mtools/ | grep -oE 'mtools-[0-9]+\.[0-9]+\.[0-9]+\.tar\.bz2' | sed -E 's/mtools-(.*)\.tar\.bz2/\1/' | sort -Vu | tail -1)" >> $@
 	@echo "UNIFONT_VER := $$(curl -s https://ftp.gnu.org/gnu/unifont/ | grep -oE 'unifont-[0-9]+\.[0-9]+\.[0-9]+' | sort -Vu | tail -1 | sed 's/unifont-//')" >> $@
 	@echo "FREETYPE_VER := $$(curl -s https://download.savannah.gnu.org/releases/freetype/ | grep -oE 'freetype-[0-9]+\.[0-9]+\.[0-9]+\.tar\.xz' | sed 's/freetype-//' | sed 's/\.tar\.xz//' | sort -V | tail -1)" >> $@
@@ -93,7 +94,6 @@ SYSLINUX_TARBALL=$(SYSLINUX_FILE).tar.xz
 SYSLINUX_URL=https://www.kernel.org/pub/linux/utils/boot/syslinux/$(SYSLINUX_TARBALL)
 SYSLINUX_FILES=bios/mbr/isohdpfx.bin bios/core/isolinux.bin bios/com32/elflink/ldlinux/ldlinux.c32 bios/com32/libutil/libutil.c32 bios/com32/lib/libcom32.c32 bios/com32/mboot/mboot.c32
 
-DROPBEAR_VER=2024.85
 DROPBEAR_FILE=DROPBEAR_
 DROPBEAR_DIR=dropbear-$(DROPBEAR_FILE)$(DROPBEAR_VER)/
 DROPBEAR_TARBALL=$(DROPBEAR_FILE)$(DROPBEAR_VER).tar.gz
@@ -505,6 +505,7 @@ KERNEL_HDR=$(INITRAMFS_BASE)usr/include/linux/version.h
 GLIBC_LIBC=$(INITRAMFS_BASE)usr/lib64/libc.so.6
 BUSYBOX_BIN=$(SRC_BASE)$(BUSYBOX_DIR)busybox
 STRACE_BIN=$(SRC_BASE)$(STRACE_DIR)src/strace
+DROPBEAR_BIN=$(SRC_BASE)$(DROPBEAR_DIR)dropbear
 DNSMASQ_BIN=$(SRC_BASE)$(DNSMASQ_DIR)src/dnsmasq
 FILEUTIL_BIN=$(INITRAMFS_BASE)usr/bin/file
 XORRISO_BIN=$(SRC_BASE)$(XORRISO_DIR)xorriso/xorriso
@@ -707,13 +708,13 @@ $(MTOOLS_MFORMAT) $(MTOOLS_MCOPY): | $(SRC_BASE)$(MTOOLS_DIR)
 	cd $(SRC_BASE)$(MTOOLS_DIR) && ./configure
 	cd $(SRC_BASE)$(MTOOLS_DIR) && $(MAKE) $(MAKEOPT)
 
-$(SRC_BASE)$(DROPBEAR_DIR)dropbear: | $(SRC_BASE)$(DROPBEAR_DIR)
+$(DROPBEAR_BIN): $(GLIBC_LIBC) | $(SRC_BASE)$(DROPBEAR_DIR)
 	$(info compile-dropbear-$(DROPBEAR_VER))
-	cd $(SRC_BASE)$(DROPBEAR_DIR) && ./configure --enable-static
-	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
-	$(foreach prog,$(DROPBEAR_PROGRAMS),strip $(SRC_BASE)$(DROPBEAR_DIR)/$(prog);cp $(SRC_BASE)$(DROPBEAR_DIR)/$(prog) $(INITRAMFS_BASE)bin;)
+	cd $(SRC_BASE)$(DROPBEAR_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s" ./configure --prefix=/usr
+	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) $(MAKEOPT) PROGRAMS="$(DROPBEAR_PROGRAMS)"
+	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) install DESTDIR=$(INITRAMFS_BASE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
 
-$(INITRAMFS_OUT): $(BUSYBOX_BIN) $(STRACE_BIN) $(DNSMASQ_BIN) $(GLIBC_LIBC) $(FILEUTIL_BIN) $(ROUTEROS_NETINSTALL) $(INITRAMFS_CONF_FILES) | $(SRC_BASE)$(LINUX_DIR) $(SRC_BASE)$(BUSYBOX_DIR)
+$(INITRAMFS_OUT): $(BUSYBOX_BIN) $(STRACE_BIN) $(DROPBEAR_BIN) $(DNSMASQ_BIN) $(GLIBC_LIBC) $(FILEUTIL_BIN) $(ROUTEROS_NETINSTALL) $(INITRAMFS_CONF_FILES) | $(SRC_BASE)$(LINUX_DIR) $(SRC_BASE)$(BUSYBOX_DIR)
 	$(info make-initramfs)
 	mkdir -p $(INITRAMFS_BASE)bin $(INITRAMFS_BASE)sbin $(INITRAMFS_BASE)usr/lib64 $(INITRAMFS_BASE)dev $(INITRAMFS_BASE)proc $(INITRAMFS_BASE)sys $(INITRAMFS_BASE)mnt $(INITRAMFS_BASE)root $(INITRAMFS_BASE)etc/init.d $(INITRAMFS_BASE)lib
 	mkdir -p $(INITRAMFS_BASE)boot $(INITRAMFS_BASE)media/floppy $(INITRAMFS_BASE)media/cdrom $(INITRAMFS_BASE)opt $(INITRAMFS_BASE)run/lock $(INITRAMFS_BASE)srv $(INITRAMFS_BASE)tmp $(INITRAMFS_BASE)var/tmp
