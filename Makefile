@@ -745,7 +745,7 @@ $(ZLIB_LIB): $(GLIBC_LIBC) | $(SRC_BASE)$(ZLIB_DIR)
 
 $(LIBCRYPT_LIB): $(GLIBC_LIBC) | $(SRC_BASE)$(LIBCRYPT_DIR)
 	$(info compile-libcrypt-$(LIBCRYPT_VER))
-	cd $(SRC_BASE)$(LIBCRYPT_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s" ./configure --prefix=/usr --libdir=/usr/lib64
+	cd $(SRC_BASE)$(LIBCRYPT_DIR) && CFLAGS="-Wno-error=discarded-qualifiers" CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s" ./configure --prefix=/usr --libdir=/usr/lib64
 	cd $(SRC_BASE)$(LIBCRYPT_DIR) && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(LIBCRYPT_DIR) && $(MAKE) $(MAKEOPT) install DESTDIR=$(INITRAMFS_BASE)
 
