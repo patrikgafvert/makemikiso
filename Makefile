@@ -701,7 +701,7 @@ $(BUSYBOX_BIN): $(GLIBC_LIBC) | $(SRC_BASE)$(BUSYBOX_DIR)
 
 $(STRACE_BIN): $(GLIBC_LIBC) | $(SRC_BASE)$(STRACE_DIR)
 	$(info compile-strace-$(STRACE_VER))
-	cd $(SRC_BASE)$(STRACE_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-pthread -s' ./configure
+	cd $(SRC_BASE)$(STRACE_DIR) && ./configure CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-pthread -s'
 	cd $(SRC_BASE)$(STRACE_DIR) && $(MAKE) $(MAKEOPT)
 
 $(DNSMASQ_BIN): $(GLIBC_LIBC) | $(SRC_BASE)$(DNSMASQ_DIR)
@@ -711,7 +711,7 @@ $(DNSMASQ_BIN): $(GLIBC_LIBC) | $(SRC_BASE)$(DNSMASQ_DIR)
 
 $(FILEUTIL_BIN): $(GLIBC_LIBC) | $(SRC_BASE)$(FILEUTIL_DIR)
 	$(info compile-fileutil-$(FILEUTIL_VER))
-	cd $(SRC_BASE)$(FILEUTIL_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" ./configure --prefix=/usr --disable-static LDFLAGS='-s' CFLAGS='-g0'
+	cd $(SRC_BASE)$(FILEUTIL_DIR) && ./configure --prefix=/usr --disable-static CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS='-s' CFLAGS='-g0'
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(FILEUTIL_DIR) && $(MAKE) install DESTDIR=$(INITRAMFS_BASE)
 
@@ -740,19 +740,19 @@ $(MTOOLS_MFORMAT) $(MTOOLS_MCOPY): | $(SRC_BASE)$(MTOOLS_DIR)
 
 $(ZLIB_LIB): $(GLIBC_LIBC) | $(SRC_BASE)$(ZLIB_DIR)
 	$(info compile-zlib-$(ZLIB_VER))
-	cd $(SRC_BASE)$(ZLIB_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s" ./configure --prefix=/usr --libdir=/usr/lib64
-	cd $(SRC_BASE)$(ZLIB_DIR) && $(MAKE) $(MAKEOPT)
+	cd $(SRC_BASE)$(ZLIB_DIR) && ./configure --prefix=/usr --libdir=/usr/lib64
+	cd $(SRC_BASE)$(ZLIB_DIR) && $(MAKE) $(MAKEOPT) CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s"
 	cd $(SRC_BASE)$(ZLIB_DIR) && $(MAKE) $(MAKEOPT) install DESTDIR=$(INITRAMFS_BASE)
 
 $(LIBCRYPT_LIB): $(GLIBC_LIBC) | $(SRC_BASE)$(LIBCRYPT_DIR)
 	$(info compile-libcrypt-$(LIBCRYPT_VER))
-	cd $(SRC_BASE)$(LIBCRYPT_DIR) && CFLAGS="-Wno-error=discarded-qualifiers" CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s" ./configure --prefix=/usr --libdir=/usr/lib64
+	cd $(SRC_BASE)$(LIBCRYPT_DIR) && ./configure --prefix=/usr --libdir=/usr/lib64 CFLAGS="-Wno-error=discarded-qualifiers" CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s"
 	cd $(SRC_BASE)$(LIBCRYPT_DIR) && $(MAKE) $(MAKEOPT)
 	cd $(SRC_BASE)$(LIBCRYPT_DIR) && $(MAKE) $(MAKEOPT) install DESTDIR=$(INITRAMFS_BASE)
 
 $(DROPBEAR_BIN): $(LIBCRYPT_LIB) $(ZLIB_LIB) $(GLIBC_LIBC) | $(SRC_BASE)$(DROPBEAR_DIR)
 	$(info compile-dropbear-$(DROPBEAR_VER))
-	cd $(SRC_BASE)$(DROPBEAR_DIR) && CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s" ./configure --prefix=/usr
+	cd $(SRC_BASE)$(DROPBEAR_DIR) && ./configure --prefix=/usr CC="gcc --sysroot=$(INITRAMFS_BASE)" LDFLAGS="-s"
 	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) $(MAKEOPT) PROGRAMS="$(DROPBEAR_PROGRAMS)"
 	cd $(SRC_BASE)$(DROPBEAR_DIR) && $(MAKE) install DESTDIR=$(INITRAMFS_BASE) PROGRAMS="$(DROPBEAR_PROGRAMS)"
 
