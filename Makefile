@@ -514,7 +514,7 @@ export file_kernelkconfig file_busyboxkconfig file_init file_issue file_passwd f
 KERNEL_OUT=$(ROOT_BASE)boot/$(KERNEL_FILE)
 INITRAMFS_CPIO=$(OUT_BASE)initramfs.cpio
 INITRAMFS_OUT=$(ROOT_BASE)boot/$(INITRAMFS_FILE)
-KERNEL_HDR=$(INITRAMFS_BASE)usr/include/linux/version.h
+KERNEL_HDR=$(OUT_BASE).kernel-headers.stamp
 GLIBC_LIBC=$(INITRAMFS_BASE)usr/lib64/libc.so.6
 ZLIB_LIB=$(INITRAMFS_BASE)usr/lib64/libz.so
 LIBCRYPT_LIB=$(INITRAMFS_BASE)usr/lib64/libcrypt.so.1
@@ -670,6 +670,7 @@ $(KERNEL_HDR): $(KERNEL_OUT) | $(SRC_BASE)$(LINUX_DIR)
 	$(info install-kernel-headers-$(LINUX_VER))
 	mkdir -p $(INITRAMFS_BASE)usr
 	cd $(SRC_BASE)$(LINUX_DIR) && $(MAKE) headers_install ARCH=x86_64 INSTALL_HDR_PATH=$(INITRAMFS_BASE)usr
+	touch $@
 
 $(GLIBC_LIBC): $(KERNEL_HDR) | $(SRC_BASE)$(GLIBC_DIR)
 	$(info compile-glibc-$(GLIBC_VER))
