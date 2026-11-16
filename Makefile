@@ -39,7 +39,7 @@ $(VERSIONS_FILE):
 	@echo "Hämtar senaste versionerna över nätverket..."
 	@echo "# Automatiskt genererade versioner - ta bort filen för att uppdatera" > $@
 	@echo "MIKROTIKVER_STABLE := $$(curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -f1 -d' ')" >> $@
-	@echo "GRUB_VER := $$(curl -s https://ftp.gnu.org/gnu/grub/ | grep -oE 'grub-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.xz' | sed 's/grub-//' | sed 's/\.tar\.xz//' | sort -V | tail -1)" >> $@
+	@echo "GRUB_VER := $$(git ls-remote --tags https://gitlab.freedesktop.org/gnu-grub/grub.git | awk -F/ '{print \$$NF}' | sed 's/\^{}//' | grep -E '^grub-[0-9]+(\.[0-9]+)*$$' | sed 's/^grub-//' | sort -V | uniq | tail -1)" >> $@
 	@echo "LINUX_VER := $$(curl -s https://www.kernel.org/releases.json | jq -r '.latest_stable.version')" >> $@
 	@echo "SYSLINUX_VER := $$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/ | grep -oE 'syslinux-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.(xz|gz)' | sed -E 's/syslinux-(.*)\.tar\.(xz|gz)/\1/' | sort -V | tail -1)" >> $@
 	@echo "BUSYBOX_VER := $$(curl -s https://busybox.net/downloads/ | grep -oE 'busybox-[0-9]+\.[0-9]+\.[0-9]+\.tar\.bz2' | sed 's/busybox-//' | sed 's/\.tar\.bz2//' | sort -V | tail -1)" >> $@
@@ -71,8 +71,8 @@ MIKROTIK_NETINSTALL_URL=https://download.mikrotik.com/routeros/$(MIKROTIK_NETINS
 
 GRUB_FILE=grub-$(GRUB_VER)
 GRUB_DIR=$(GRUB_FILE)/
-GRUB_TARBALL=$(GRUB_FILE).tar.xz
-GRUB_URL=https://mirror.bahnhof.net/pub/gnu/grub/$(GRUB_TARBALL)
+GRUB_TARBALL=$(GRUB_FILE).tar.gz
+GRUB_URL=https://gitlab.freedesktop.org/api/v4/projects/26558/packages/generic/source-assets/$(GRUB_FILE)/$(GRUB_TARBALL)
 GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
 
 LINUX_MAJOR=$(word 1,$(subst ., ,$(LINUX_VER)))
