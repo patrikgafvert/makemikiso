@@ -73,7 +73,7 @@ GRUB_FILE=grub-$(GRUB_VER)
 GRUB_DIR=$(GRUB_FILE)/
 GRUB_TARBALL=$(GRUB_FILE).tar.gz
 GRUB_URL=https://gitlab.freedesktop.org/api/v4/projects/26558/packages/generic/source-assets/$(GRUB_FILE)/$(GRUB_TARBALL)
-GRUB_MODULES=all_video disk part_gpt part_msdos linux normal configfile search search_label iso9660 ls test gzio multiboot2 efi_gop efi_uga font gfxterm videoinfo
+GRUB_MODULES=disk part_gpt part_msdos linux normal configfile search search_label search_fs_uuid search_fs_file   iso9660 fat ext2 ls test gzio multiboot2 efi_gop efitextmode font gfxterm video video_fb videoinfo
 
 LINUX_MAJOR=$(word 1,$(subst ., ,$(LINUX_VER)))
 LINUX_FILE=linux-$(LINUX_VER)
