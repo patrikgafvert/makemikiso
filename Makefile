@@ -39,7 +39,7 @@ $(VERSIONS_FILE):
 	@echo "Hämtar senaste versionerna över nätverket..."
 	@echo "# Automatiskt genererade versioner - ta bort filen för att uppdatera" > $@
 	@echo "MIKROTIKVER_STABLE := $$(curl -s http://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -f1 -d' ')" >> $@
-	@echo "GRUB_VER := $$(git ls-remote --tags https://gitlab.freedesktop.org/gnu-grub/grub.git | awk -F/ '{print \$$NF}' | sed 's/\^{}//' | grep -E '^grub-[0-9]+(\.[0-9]+)*$$' | sed 's/^grub-//' | sort -V | uniq | tail -1)" >> $@
+	@echo "GRUB_VER := $$(git ls-remote --tags https://gitlab.freedesktop.org/gnu-grub/grub.git | awk -F/ '{print $$NF}' | sed 's/\^{}//' | grep -E '^grub-[0-9]+(\.[0-9]+)*$$' | sed 's/^grub-//' | sort -V | uniq | tail -1)" >> $@
 	@echo "LINUX_VER := $$(curl -s https://www.kernel.org/releases.json | jq -r '.latest_stable.version')" >> $@
 	@echo "SYSLINUX_VER := $$(curl -s https://www.kernel.org/pub/linux/utils/boot/syslinux/ | grep -oE 'syslinux-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.(xz|gz)' | sed -E 's/syslinux-(.*)\.tar\.(xz|gz)/\1/' | sort -V | tail -1)" >> $@
 	@echo "BUSYBOX_VER := $$(curl -s https://busybox.net/downloads/ | grep -oE 'busybox-[0-9]+\.[0-9]+\.[0-9]+\.tar\.bz2' | sed 's/busybox-//' | sed 's/\.tar\.bz2//' | sort -V | tail -1)" >> $@
